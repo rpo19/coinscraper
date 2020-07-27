@@ -1,0 +1,5 @@
+binance
+tweepy
+PySpark
+jupyter
+findspark
