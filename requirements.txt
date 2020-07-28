@@ -3,3 +3,4 @@ tweepy
 PySpark
 jupyter
 findspark
+kafka-python
