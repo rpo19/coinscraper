@@ -1,3 +1,5 @@
 **/venv
 **/secret*
 **/.ipynb*
+scalaspark/project
+scalaspark/target
