@@ -6,25 +6,29 @@ object Main {
   def main(args: Array[String]) {
 
     val spark = SparkSession.builder().appName("Cons test").getOrCreate()
+    spark.sparkContext.setLogLevel("WARN")
     import spark.implicits._
 
+    println("Startup completed")
+
     //https://jaceklaskowski.gitbooks.io/spark-structured-streaming/content/spark-sql-streaming-kafka-data-source.html
-    val sq = spark.readStream
+    val tweets = spark.readStream
       .format("kafka")
       .option("kafka.bootstrap.servers", "localhost:9092")
       .option("subscribe", "test")
       .load
-      .withColumn("value", $"value" cast "string")
-      .writeStream
-      .format("console")
-      .option("truncate", false)
-      .option("checkpointLocation", "checkpointLocation-kafka2console")
-      .queryName("kafka2console-continuous")
-      .trigger(Trigger.Continuous(1.seconds))
-      .start
+      .selectExpr("cast (value as string) value")
 
-    sq.awaitTermination
-    sq.stop
+    val words = tweets.as[String].flatMap(_.split(" "))
+    val wordCounts = words.groupBy("value").count().orderBy($"count".desc)
+
+    val query = wordCounts.writeStream
+      .outputMode("complete")
+      .format("console")
+      .start()
+
+    query.awaitTermination
+    query.stop
 
     // val df2 = df
     //   .selectExpr("CAST(value AS STRING)")
