@@ -6,4 +6,4 @@ scalaspark/target
 scalaspark/.*
 **/__pycache__
 .metals
-scalaspark/checkpointLocation-kafka2console
+**/.scalafmt.conf
