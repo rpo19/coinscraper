@@ -1,4 +1,4 @@
-binance
+python-binance
 tweepy
 PySpark
 jupyter
