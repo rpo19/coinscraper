@@ -16,7 +16,7 @@ producer = kafka.KafkaProducer(bootstrap_servers=kafka_servers,
 class MyStreamListener(tweepy.StreamListener):
 
     def on_status(self, tweet):
-        print(tweet._json)
+        print(json.dumps(tweet._json))
         producer.send('tweets-bitcoin', value=tweet._json)
 
 myStreamListener = MyStreamListener()
