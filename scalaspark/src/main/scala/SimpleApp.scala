@@ -96,6 +96,14 @@ object Main {
       .format("console")
       .start()
 
+    val jdbcDF = spark.read
+      .format("jdbc")
+      .option("url", "jdbc:postgresql://127.0.0.1:5432/postgres")
+      .option("dbtable", "public.conditions")
+      .option("user", "postgres")
+      .option("password", "password")
+      .load()
+
     tweets.awaitTermination
     binance.awaitTermination
     tweets.stop
