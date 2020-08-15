@@ -4,6 +4,7 @@ services:
     image: timescale/timescaledb:1.7.2-pg12
     volumes:
       - ./data/timescale:/var/lib/postgresql
+      - ./099_create_tables.sql:/docker-entrypoint-initdb.d/099_create_tables.sql
     ports:
       - 5432:5432
     restart: unless-stopped
