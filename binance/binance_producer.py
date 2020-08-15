@@ -3,6 +3,7 @@ from binance.websockets import BinanceSocketManager
 import kafka
 import json
 import secrets
+import time
 
 kafka_servers = ['localhost:9092']
 
@@ -13,6 +14,7 @@ producer = kafka.KafkaProducer(bootstrap_servers=kafka_servers,
                          json.dumps(x).encode('utf-8'))
 
 def process_message(msg):
+    msg["timestamp"] = time.time()
     print(json.dumps(msg))
     producer.send('binance-BTCUSDT', value=msg)
     # do something

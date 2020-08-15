@@ -50,6 +50,7 @@ object Main {
       .add("B", "string")
       .add("a", "string")
       .add("A", "string")
+      .add("timestamp", "double")
 
     val spark = SparkSession
       .builder()
