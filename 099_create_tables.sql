@@ -9,7 +9,9 @@ CREATE TABLE IF NOT EXISTS prices (
  askqty         DOUBLE PRECISION    NOT NULL,
  bidprice       DOUBLE PRECISION    NOT NULL,
  bidqty         DOUBLE PRECISION    NOT NULL,
- symbol         CHAR(15)            NOT NULL
+ symbol         CHAR(15)            NOT NULL,
+ lastmasktrend  DOUBLE PRECISION,
+ lastmbidtrend  DOUBLE PRECISION
 );
 
 SELECT create_hypertable('tweets', 'timestamp');

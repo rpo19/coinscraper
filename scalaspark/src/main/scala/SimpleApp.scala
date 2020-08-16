@@ -63,6 +63,18 @@ object Main {
 
     println("Startup completed")
 
+    val pricesDB = spark.read
+      .format("jdbc")
+      .option("url", "jdbc:postgresql://127.0.0.1:5432/postgres")
+      .option("dbtable", "prices")
+      .option("user", "postgres")
+      .option("password", "password")
+      .load()
+
+    val lastMinAvg = pricesDB
+      .filter(expr("timestamp > now() - interval '1 minute'"))
+      .agg(avg($"askprice"), avg($"bidprice"))
+
     val tweets = spark.readStream
       .format("kafka")
       .option("kafka.bootstrap.servers", "localhost:9092")
@@ -103,7 +115,21 @@ object Main {
       .drop("value")
       .writeStream
       .foreachBatch { (batchDF: DataFrame, batchId: Long) =>
-        batchDF.write
+        val lastmAvg = lastMinAvg.take(1)(0)
+
+        val batchDFavg =
+          batchDF.agg(avg($"askprice"), avg($"bidprice")).take(1)(0)
+
+        val lastmAskTrend = (batchDFavg(0).asInstanceOf[Double] - lastmAvg(0)
+          .asInstanceOf[Double]) / lastmAvg(0).asInstanceOf[Double] * 100
+
+        val lastmBidTrend = (batchDFavg(1).asInstanceOf[Double] - lastmAvg(1)
+          .asInstanceOf[Double]) / lastmAvg(1).asInstanceOf[Double] * 100
+
+        batchDF
+          .withColumn("lastmasktrend", lit(lastmAskTrend).cast(DoubleType))
+          .withColumn("lastmbidtrend", lit(lastmBidTrend).cast(DoubleType))
+          .write
           .format("jdbc")
           .option("url", "jdbc:postgresql://127.0.0.1:5432/postgres")
           .option("dbtable", "prices")
