@@ -5,10 +5,10 @@ CREATE TABLE IF NOT EXISTS tweets (
 
 CREATE TABLE IF NOT EXISTS prices (
  timestamp      TIMESTAMPTZ         NOT NULL,
- askPrice       DOUBLE PRECISION    NOT NULL,
- askQty         DOUBLE PRECISION    NOT NULL,
- bidPrice       DOUBLE PRECISION    NOT NULL,
- bidQty         DOUBLE PRECISION    NOT NULL,
+ askprice       DOUBLE PRECISION    NOT NULL,
+ askqty         DOUBLE PRECISION    NOT NULL,
+ bidprice       DOUBLE PRECISION    NOT NULL,
+ bidqty         DOUBLE PRECISION    NOT NULL,
  symbol         CHAR(15)            NOT NULL
 );
 

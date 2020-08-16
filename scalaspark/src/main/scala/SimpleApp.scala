@@ -1,6 +1,7 @@
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{SaveMode, SparkSession}
 import org.apache.spark.sql.streaming.Trigger
 import scala.concurrent.duration._
+import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.types.{
   StructType,
   DateType,
@@ -62,7 +63,6 @@ object Main {
 
     println("Startup completed")
 
-    //https://jaceklaskowski.gitbooks.io/spark-structured-streaming/content/spark-sql-streaming-kafka-data-source.html
     val tweets = spark.readStream
       .format("kafka")
       .option("kafka.bootstrap.servers", "localhost:9092")
@@ -74,10 +74,18 @@ object Main {
         ($"value.timestamp_ms".cast(LongType) / 1000).cast(TimestampType)
       )
       .drop("value.timestamp_ms")
-      // .withColumnRenamed("value.timestamp_ms_new", "value.timestamp_ms")
       .select("timestamp", "value.text")
       .writeStream
-      .format("console")
+      .foreachBatch { (batchDF: DataFrame, batchId: Long) =>
+        batchDF.write
+          .format("jdbc")
+          .option("url", "jdbc:postgresql://127.0.0.1:5432/postgres")
+          .option("dbtable", "tweets")
+          .option("user", "postgres")
+          .option("password", "password")
+          .mode(SaveMode.Append)
+          .save()
+      }
       .start()
 
     val binance = spark.readStream
@@ -86,40 +94,30 @@ object Main {
       .option("subscribe", "binance-BTCUSDT")
       .load
       .select(from_json($"value".cast("string"), binance_schema).alias("value"))
-      .withColumn("askPrice", $"value.a".cast(DoubleType))
-      .withColumn("askQty", $"value.A".cast(DoubleType))
-      .withColumn("bidPrice", $"value.b".cast(DoubleType))
-      .withColumn("bidQty", $"value.B".cast(DoubleType))
+      .withColumn("askprice", $"value.a".cast(DoubleType))
+      .withColumn("askqty", $"value.A".cast(DoubleType))
+      .withColumn("bidprice", $"value.b".cast(DoubleType))
+      .withColumn("bidqty", $"value.B".cast(DoubleType))
       .withColumn("symbol", $"value.s")
       .withColumn("timestamp", current_timestamp())
       .drop("value")
       .writeStream
-      .format("console")
+      .foreachBatch { (batchDF: DataFrame, batchId: Long) =>
+        batchDF.write
+          .format("jdbc")
+          .option("url", "jdbc:postgresql://127.0.0.1:5432/postgres")
+          .option("dbtable", "prices")
+          .option("user", "postgres")
+          .option("password", "password")
+          .mode(SaveMode.Append)
+          .save()
+      }
       .start()
-
-    val jdbcDF = spark.read
-      .format("jdbc")
-      .option("url", "jdbc:postgresql://127.0.0.1:5432/postgres")
-      .option("dbtable", "public.conditions")
-      .option("user", "postgres")
-      .option("password", "password")
-      .load()
 
     tweets.awaitTermination
     binance.awaitTermination
     tweets.stop
     binance.stop
-
-    // val df2 = df
-    //   .selectExpr("CAST(value AS STRING)")
-
-    //df.selectExpr("CAST(key AS STRING)", "CAST(value AS STRING)").as[(String, String)]
-    //https://www.thetopsites.net/article/51617823.shtml
-    // val query = df2.writeStream
-    //   .format("console")
-    //   .option("truncate", "false")
-    //   .start()
-    //   .awaitTermination()
 
   }
 
