@@ -7,7 +7,8 @@ import org.apache.spark.sql.types.{
   DateType,
   TimestampType,
   LongType,
-  DoubleType
+  DoubleType,
+  BooleanType
 }
 import org.apache.spark.sql.functions._
 
@@ -121,14 +122,14 @@ object Main {
           batchDF.agg(avg($"askprice"), avg($"bidprice")).take(1)(0)
 
         val lastmAskTrend = (batchDFavg(0).asInstanceOf[Double] - lastmAvg(0)
-          .asInstanceOf[Double]) / lastmAvg(0).asInstanceOf[Double] * 100
+          .asInstanceOf[Double]) >= 0
 
         val lastmBidTrend = (batchDFavg(1).asInstanceOf[Double] - lastmAvg(1)
-          .asInstanceOf[Double]) / lastmAvg(1).asInstanceOf[Double] * 100
+          .asInstanceOf[Double]) >= 0
 
         batchDF
-          .withColumn("lastmasktrend", lit(lastmAskTrend).cast(DoubleType))
-          .withColumn("lastmbidtrend", lit(lastmBidTrend).cast(DoubleType))
+          .withColumn("lastmasktrend", lit(lastmAskTrend).cast(BooleanType))
+          .withColumn("lastmbidtrend", lit(lastmBidTrend).cast(BooleanType))
           .write
           .format("jdbc")
           .option("url", "jdbc:postgresql://127.0.0.1:5432/postgres")
