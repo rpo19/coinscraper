@@ -11,6 +11,7 @@ import org.apache.spark.sql.types.{
   BooleanType
 }
 import org.apache.spark.sql.functions._
+import _root_.java.sql.Timestamp
 
 object Main {
   def main(args: Array[String]) {
@@ -141,10 +142,49 @@ object Main {
       }
       .start()
 
+    val lastTrendPerMinDB = spark.read
+      .format("jdbc")
+      .option("url", "jdbc:postgresql://127.0.0.1:5432/postgres")
+      .option("dbtable", "trendperminute")
+      .option("user", "postgres")
+      .option("password", "password")
+      .load()
+      .agg(max("timestamp"))
+
+    val timer = new java.util.Timer()
+    val task = new java.util.TimerTask {
+      def run() = {
+        val latestTime = lastTrendPerMinDB.take(1)(0)(0).asInstanceOf[Timestamp]
+
+        val trendPerMin1 = pricesDB.filter($"timestamp" > latestTime && ! $"lastmasktrend".isNull)
+                .groupBy(window($"timestamp", "1 minute"), $"lastmasktrend").count()
+
+        val trendPerMin2 = trendPerMin1.groupBy("window")
+          .agg(max($"count")).withColumnRenamed("max(count)", "max")
+
+        val trendPerMin = trendPerMin1
+          .join(trendPerMin2, "window")
+          .filter(expr("max = count"))
+          .withColumn("timestamp", $"window.start")
+          .withColumnRenamed("lastmasktrend", "asktrend")
+          .select("timestamp", "asktrend")
+          .write
+          .format("jdbc")
+          .option("url", "jdbc:postgresql://127.0.0.1:5432/postgres")
+          .option("dbtable", "trendperminute")
+          .option("user", "postgres")
+          .option("password", "password")
+          .mode(SaveMode.Append)
+          .save()
+      }
+    }
+    timer.schedule(task, 60000L, 60000L)
+
     tweets.awaitTermination
     binance.awaitTermination
     tweets.stop
     binance.stop
+    timer.cancel()
 
   }
 
