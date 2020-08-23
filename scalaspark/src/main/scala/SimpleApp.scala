@@ -73,7 +73,7 @@ object Main {
       .load()
 
     val lastMinAvg = pricesDB
-      .filter(expr("timestamp > now() - interval '1 minute'"))
+      .filter(expr("timestamp < now() - interval '1 minute' and timestamp > now() - interval '2 minute'"))
       .agg(avg($"askprice"), avg($"bidprice"))
 
     val tweets = spark.readStream
