@@ -1,10 +1,10 @@
 CREATE TABLE IF NOT EXISTS tweets (
- timestamp      TIMESTAMPTZ         PRIMARY KEY,
+ timestamp      TIMESTAMPTZ         NOT NULL,
  text           TEXT                NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS prices (
- timestamp      TIMESTAMPTZ         PRIMARY KEY,
+ timestamp      TIMESTAMPTZ         NOT NULL,
  askprice       DOUBLE PRECISION    NOT NULL,
  askqty         DOUBLE PRECISION    NOT NULL,
  bidprice       DOUBLE PRECISION    NOT NULL,
@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS prices (
 
 CREATE TABLE IF NOT EXISTS trendperminute (
  timestamp      TIMESTAMPTZ         PRIMARY KEY,
- asktrend           BOOLEAN         NOT NULL
+ asktrend           BOOLEAN            NOT NULL
 );
 
 SELECT create_hypertable('tweets', 'timestamp');

@@ -156,8 +156,12 @@ object Main {
       def run() = {
         val latestTime = lastTrendPerMinDB.take(1)(0)(0).asInstanceOf[Timestamp]
 
-        val trendPerMin1 = pricesDB.filter($"timestamp" > latestTime && ! $"lastmasktrend".isNull)
-                .groupBy(window($"timestamp", "1 minute"), $"lastmasktrend").count()
+        val trendPerMin1 = if (latestTime == null)
+                              pricesDB.filter(! $"lastmasktrend".isNull)
+                                .groupBy(window($"timestamp", "1 minute"), $"lastmasktrend").count()
+                            else
+                              pricesDB.filter($"timestamp" > latestTime && ! $"lastmasktrend".isNull)
+                                .groupBy(window($"timestamp", "1 minute"), $"lastmasktrend").count()
 
         val trendPerMin2 = trendPerMin1.groupBy("window")
           .agg(max($"count")).withColumnRenamed("max(count)", "max")
