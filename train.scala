@@ -1,7 +1,7 @@
 import org.apache.spark.ml.feature.Word2Vec
 import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.sql.Row
-
+import java.sql.Timestamp
 import org.apache.spark.sql.types.{
   StructType,
   DateType,
@@ -29,8 +29,11 @@ val tweetsDB = spark.read
     .option("password", "password")
     .load()
 
-val tweetsTrain = tweetsDB.map(x => (x.getAs[Timestamp](0), x.getAs[String](1).split(" "))).
-  withColumnRenamed("_1", "timestamp").withColumnRenamed("_2", "splitted")
+val tweetsTrain = tweetsDB
+  .map(x => (x.getAs[Long](0), x.getAs[Timestamp](1), x.getAs[String](2).split(" ")))
+  .withColumnRenamed("_1", "id")
+  .withColumnRenamed("_2", "timestamp")
+  .withColumnRenamed("_3", "splitted")
 
 // Learn a mapping from words to Vectors.
 val word2Vec = new Word2Vec()
@@ -65,3 +68,12 @@ val trendperminDB = spark.read
     .option("user", "postgres")
     .option("password", "password")
     .load()
+
+
+val trainData = result
+  .join(trendperminDB
+    .withColumnRenamed("timestamp", "trend_timestamp")
+    .withColumnRenamed("id", "trend_id")
+    .withColumnRenamed("asktrend", "nextminasktrend"))
+  .filter(expr("timestamp < trend_timestamp and timestamp > trend_timestamp - interval '1 minute'"))
+  .select("id", "timestamp", "splitted", "word2vec", "nextminasktrend")
