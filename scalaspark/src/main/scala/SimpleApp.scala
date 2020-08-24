@@ -182,7 +182,7 @@ object Main {
           .save()
       }
     }
-    timer.schedule(task, 60000L, 60000L)
+    timer.schedule(task, 0, 60000L)
 
     tweets.awaitTermination
     binance.awaitTermination
