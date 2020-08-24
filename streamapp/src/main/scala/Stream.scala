@@ -151,17 +151,27 @@ object Main {
       .load()
       .agg(max("timestamp"))
 
+    def currentmin() : Timestamp = {
+      val now = System.currentTimeMillis()
+      return new Timestamp(now - now % 60000L)
+    }
+
     val timer = new java.util.Timer()
     val task = new java.util.TimerTask {
       def run() = {
         val latestTime = lastTrendPerMinDB.take(1)(0)(0).asInstanceOf[Timestamp]
 
         val trendPerMin1 = if (latestTime == null)
-                              pricesDB.filter(! $"lastmasktrend".isNull)
-                                .groupBy(window($"timestamp", "1 minute"), $"lastmasktrend").count()
+                              pricesDB.filter(! $"lastmasktrend".isNull
+                                  && $"timestamp" < currentmin())
+                                .groupBy(window($"timestamp", "1 minute"), $"lastmasktrend")
+                                .count()
                             else
-                              pricesDB.filter($"timestamp" > latestTime && ! $"lastmasktrend".isNull)
-                                .groupBy(window($"timestamp", "1 minute"), $"lastmasktrend").count()
+                              pricesDB.filter(! $"lastmasktrend".isNull
+                                  && $"timestamp" < currentmin()
+                                  && $"timestamp" >= new Timestamp(latestTime.getTime() + 60000L))
+                                .groupBy(window($"timestamp", "1 minute"), $"lastmasktrend")
+                                .count()
 
         val trendPerMin2 = trendPerMin1.groupBy("window")
           .agg(max($"count")).withColumnRenamed("max(count)", "max")
