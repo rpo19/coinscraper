@@ -1,9 +1,9 @@
 **/venv
 **/secret*
 **/.ipynb*
-scalaspark/project
-scalaspark/target
-scalaspark/.*
+*app/project
+*app/target
+*app/.*
 **/__pycache__
 .metals
 **/.scalafmt.conf
