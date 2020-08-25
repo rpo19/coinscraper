@@ -73,10 +73,6 @@ object Main {
       .option("password", "password")
       .load()
 
-    val lastMinAvg = pricesDB
-      .filter(expr("timestamp < now() - interval '1 minute' and timestamp > now() - interval '2 minute'"))
-      .agg(avg($"askprice"), avg($"bidprice"))
-
     val tweets = spark.readStream
       .format("kafka")
       .option("kafka.bootstrap.servers", "localhost:9092")
@@ -162,12 +158,12 @@ object Main {
           .withColumnRenamed("avg(askprice)", "avgaskprice")
 
         val trendPerMin = step2
-          .join(step1
+          .join(step2
             .withColumnRenamed("timestamp", "old_timestamp")
             .withColumnRenamed("avgaskprice", "old_avgaskprice"))
           .filter(expr("old_timestamp = timestamp - interval '1 minute'"))
           .withColumn("asktrend", $"avgaskprice" >= $"old_avgaskprice")
-          .select("timestamp", "asktrend"
+          .select("timestamp", "asktrend")
           .write
           .format("jdbc")
           .option("url", "jdbc:postgresql://127.0.0.1:5432/postgres")
