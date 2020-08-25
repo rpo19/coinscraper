@@ -117,20 +117,7 @@ object Main {
       .drop("value")
       .writeStream
       .foreachBatch { (batchDF: DataFrame, batchId: Long) =>
-        val lastmAvg = lastMinAvg.take(1)(0)
-
-        val batchDFavg =
-          batchDF.agg(avg($"askprice"), avg($"bidprice")).take(1)(0)
-
-        val lastmAskTrend = (batchDFavg(0).asInstanceOf[Double] - lastmAvg(0)
-          .asInstanceOf[Double]) >= 0
-
-        val lastmBidTrend = (batchDFavg(1).asInstanceOf[Double] - lastmAvg(1)
-          .asInstanceOf[Double]) >= 0
-
         batchDF
-          .withColumn("lastmasktrend", lit(lastmAskTrend).cast(BooleanType))
-          .withColumn("lastmbidtrend", lit(lastmBidTrend).cast(BooleanType))
           .write
           .format("jdbc")
           .option("url", "jdbc:postgresql://127.0.0.1:5432/postgres")
@@ -161,27 +148,26 @@ object Main {
       def run() = {
         val latestTime = lastTrendPerMinDB.take(1)(0)(0).asInstanceOf[Timestamp]
 
-        val trendPerMin1 = if (latestTime == null)
-                              pricesDB.filter(! $"lastmasktrend".isNull
-                                  && $"timestamp" < currentmin())
-                                .groupBy(window($"timestamp", "1 minute"), $"lastmasktrend")
-                                .count()
-                            else
-                              pricesDB.filter(! $"lastmasktrend".isNull
-                                  && $"timestamp" < currentmin()
-                                  && $"timestamp" >= new Timestamp(latestTime.getTime() + 60000L))
-                                .groupBy(window($"timestamp", "1 minute"), $"lastmasktrend")
-                                .count()
+        val step1 = if (latestTime == null)
+            pricesDB.filter($"timestamp" < currentmin())
+          else
+            pricesDB.filter($"timestamp" < currentmin()
+              && $"timestamp" >= new Timestamp(latestTime.getTime() + 60000L))
 
-        val trendPerMin2 = trendPerMin1.groupBy("window")
-          .agg(max($"count")).withColumnRenamed("max(count)", "max")
+        val step2 = step1
+          .groupBy(window($"timestamp", "1 minute"))
+          .agg(avg("askprice"))
+          .select("window.start", "avg(askprice)")
+          .withColumnRenamed("start", "timestamp")
+          .withColumnRenamed("avg(askprice)", "avgaskprice")
 
-        val trendPerMin = trendPerMin1
-          .join(trendPerMin2, "window")
-          .filter(expr("max = count"))
-          .withColumn("timestamp", $"window.start")
-          .withColumnRenamed("lastmasktrend", "asktrend")
-          .select("timestamp", "asktrend")
+        val trendPerMin = step2
+          .join(step1
+            .withColumnRenamed("timestamp", "old_timestamp")
+            .withColumnRenamed("avgaskprice", "old_avgaskprice"))
+          .filter(expr("old_timestamp = timestamp - interval '1 minute'"))
+          .withColumn("asktrend", $"avgaskprice" >= $"old_avgaskprice")
+          .select("timestamp", "asktrend"
           .write
           .format("jdbc")
           .option("url", "jdbc:postgresql://127.0.0.1:5432/postgres")
