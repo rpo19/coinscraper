@@ -19,9 +19,8 @@ import org.apache.spark.sql.types.{
 import org.apache.spark.ml.feature.Tokenizer
 import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
 import opennlp.tools.stemmer.PorterStemmer
-import scala.collection.mutable.WrappedArray
 import org.apache.spark.ml.classification.LogisticRegressionModel
-import org.apache.spark.ml.feature.Word2VecModel
+// import org.apache.spark.ml.feature.Word2VecModel
 import org.apache.spark.ml.feature.{CountVectorizer, CountVectorizerModel}
 
 object Main {
@@ -62,7 +61,15 @@ object Main {
       .option("password", "password")
       .load()
 
-    var joined = tweetsDB
+    // def myf(x: Row) : (Long, Timestamp, String, Integer) = {
+    //   var trend :String = " malissimo "
+    //   if (x.getAs[Integer](4) == 1) {
+    //       trend = " benissimo "
+    //   }
+    //   return (x.getAs[Long](0), x.getAs[Timestamp](1), trend + x.getAs[String](2), x.getAs[Integer](4))
+    // }
+
+    val joined = tweetsDB
       .join(trendperminDB
         .withColumnRenamed("timestamp", "trend_timestamp")
         .withColumnRenamed("id", "trend_id")
@@ -70,6 +77,7 @@ object Main {
       .filter(expr("timestamp < trend_timestamp and timestamp >= trend_timestamp - interval '1 minute'"))
       .select("id", "timestamp", "text", "nextminasktrend")
       .withColumn("label", $"nextminasktrend".cast(IntegerType))
+      // .map(x => myf(x)).toDF.select($"_1".as("id"), $"_2".as("timestamp"), $"_3".as("text"), $"_4".as("label"))
 
     // val tweetsTrain = tweetsDB
     //   .map(x => (x.getAs[Long](0), x.getAs[Timestamp](1), x.getAs[String](2).split(" ")))
@@ -87,30 +95,29 @@ object Main {
     val preprocessed = remover.transform(tokenizer.transform(joined))
                         .select("id", "timestamp", "words", "label")
                         .map(x => (x.getAs[Long](0), x.getAs[Timestamp](1),
-                            x.getAs[WrappedArray[String]](2)
+                            x.getAs[Seq[String]](2)
+                              .filter(_.length>0)
                               .map(y => new PorterStemmer().stem(y)),
                             x.getAs[Integer](3)))
-                        .withColumnRenamed("_1", "id")
-                        .withColumnRenamed("_2", "timestamp")
-                        .withColumnRenamed("_3", "words")
-                        .withColumnRenamed("_4", "label")
+                        .toDF
+                        .select($"_1".as("id"), $"_2".as("timestamp"), $"_3".as("words"), $"_4".as("label"))
 
     // Learn a mapping from words to Vectors.
-    val word2VecModel = new Word2Vec()
-      .setInputCol("words")
-      .setOutputCol("features")
-      .setVectorSize(3)
-      .setMinCount(0)
-      .fit(preprocessed)
-    val allData = word2VecModel.transform(preprocessed)
-
-    // val cvModel: CountVectorizerModel = new CountVectorizer()
+    // val word2VecModel = new Word2Vec()
     //   .setInputCol("words")
     //   .setOutputCol("features")
-    //   .setVocabSize(3)
-    //   .setMinDF(2)
-    //   .fit(tweetsTrain)
-    // val result = cvModel.transform(tweetsTrain)
+    //   .setVectorSize(3)
+    //   .setMinCount(0)
+    //   .fit(preprocessed)
+    // val allData = word2VecModel.transform(preprocessed)
+    
+    val cvModel: CountVectorizerModel = new CountVectorizer()
+      .setInputCol("words")
+      .setOutputCol("features")
+      .setVocabSize(3)
+      .setMinDF(2)
+      .fit(preprocessed)
+    val allData = cvModel.transform(preprocessed)
 
     // trend per minute
     // val trendPerMin1 = pricesDB.filter(expr("lastmasktrend is not null"))
@@ -160,10 +167,10 @@ object Main {
     val finalModel = lr.fit(allData)
 
     finalModel.write.overwrite().save("/tmp/spark-logistic-regression-model")
-    // featuresModel.write.overwrite().save("/tmp/spark-features-model")
+    cvModel.write.overwrite().save("/tmp/spark-cv-model")
 
     val loadedModel = LogisticRegressionModel.load("/tmp/spark-logistic-regression-model")
-    // val loadedw2vModel = featuresModel.load("/tmp/spark-features-model")
+    val loadedcvModel = CountVectorizerModel.load("/tmp/spark-cv-model")
 
   }
 
