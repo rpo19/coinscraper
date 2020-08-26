@@ -2,6 +2,7 @@ CREATE TABLE IF NOT EXISTS tweets (
  id             BIGSERIAL              NOT NULL,
  timestamp      TIMESTAMPTZ         NOT NULL,
  text           TEXT                NOT NULL,
+ prediction     BOOLEAN,
  PRIMARY KEY(timestamp, id)
 );
 

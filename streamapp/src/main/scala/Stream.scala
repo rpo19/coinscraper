@@ -12,9 +12,19 @@ import org.apache.spark.sql.types.{
 }
 import org.apache.spark.sql.functions._
 import _root_.java.sql.Timestamp
+import org.apache.spark.ml.feature.Tokenizer
+import opennlp.tools.stemmer.PorterStemmer
+import org.apache.spark.ml.classification.LogisticRegressionModel
+// import org.apache.spark.ml.feature.Word2VecModel
+import org.apache.spark.ml.feature.{CountVectorizer, CountVectorizerModel}
+import org.apache.spark.ml.feature.StopWordsRemover
+import org.apache.spark.ml.classification.LogisticRegression
 
 object Main {
   def main(args: Array[String]) {
+
+    val lrModel = LogisticRegressionModel.load("hdfs://localhost:9000/tmp/models/spark-logistic-regression-model")
+    val cvModel = CountVectorizerModel.load("hdfs://localhost:9000/tmp/models/spark-cv-model")
 
     val tweets_schema = new StructType()
       .add("created_at", "string")
@@ -73,6 +83,14 @@ object Main {
       .option("password", "password")
       .load()
 
+    val tokenizer = new Tokenizer()
+      .setInputCol("text")
+      .setOutputCol("tokens")
+
+    val remover = new StopWordsRemover()
+      .setInputCol("tokens")
+      .setOutputCol("words")
+
     val tweets = spark.readStream
       .format("kafka")
       .option("kafka.bootstrap.servers", "localhost:9092")
@@ -87,7 +105,23 @@ object Main {
       .select("timestamp", "value.text")
       .writeStream
       .foreachBatch { (batchDF: DataFrame, batchId: Long) =>
-        batchDF.write
+        val preprocessed = remover.transform(tokenizer.transform(batchDF))
+          .select("timestamp", "text", "words")
+          .map(x => (x.getAs[Timestamp](0),
+              x.getAs[String](1),
+              x.getAs[Seq[String]](2)
+                .filter(_.length>0)
+                .map(y => new PorterStemmer().stem(y))))
+          .toDF
+          .select($"_1".as("timestamp"), $"_2".as("text"), $"_3".as("words"))
+
+          
+        lrModel.transform(cvModel.transform(preprocessed))
+          .withColumn("b_prediction", $"prediction".cast(BooleanType))
+          .drop("prediction")
+          .withColumnRenamed("b_prediction", "prediction")
+          .select("timestamp", "text", "prediction")
+          .write
           .format("jdbc")
           .option("url", "jdbc:postgresql://127.0.0.1:5432/postgres")
           .option("dbtable", "tweets")

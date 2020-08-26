@@ -166,11 +166,11 @@ object Main {
 
     val finalModel = lr.fit(allData)
 
-    finalModel.write.overwrite().save("/tmp/spark-logistic-regression-model")
-    cvModel.write.overwrite().save("/tmp/spark-cv-model")
+    finalModel.write.overwrite().save("hdfs://localhost:9000/tmp/models/spark-logistic-regression-model")
+    cvModel.write.overwrite().save("hdfs://localhost:9000/tmp/models/spark-cv-model")
 
-    val loadedModel = LogisticRegressionModel.load("/tmp/spark-logistic-regression-model")
-    val loadedcvModel = CountVectorizerModel.load("/tmp/spark-cv-model")
+    // val loadedModel = LogisticRegressionModel.load("hdfs://localhost:9000/tmp/models/spark-logistic-regression-model")
+    // val loadedcvModel = CountVectorizerModel.load("hdfs://localhost:9000/tmp/models/spark-cv-model")
 
   }
 
