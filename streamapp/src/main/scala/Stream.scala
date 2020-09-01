@@ -97,31 +97,33 @@ object Main {
       .option("kafka.bootstrap.servers", "localhost:9092")
       .option("subscribe", "tweets-bitcoin")
       .load
-      .select(from_json($"value".cast("string"), tweets_schema).alias("value"))
+      .withColumn("receivedat", current_timestamp())
+      .select($"receivedat", from_json($"value".cast("string"), tweets_schema).alias("value"))
       .withColumn(
         "timestamp",
         ($"value.timestamp_ms".cast(LongType) / 1000).cast(TimestampType)
       )
       .drop("value.timestamp_ms")
-      .select("timestamp", "value.text")
+      .select("timestamp", "value.text", "receivedat")
       .writeStream
       .foreachBatch { (batchDF: DataFrame, batchId: Long) =>
         val preprocessed = remover.transform(tokenizer.transform(batchDF))
-          .select("timestamp", "text", "words")
+          .select("timestamp", "receivedat", "text", "words")
           .map(x => (x.getAs[Timestamp](0),
-              x.getAs[String](1),
-              x.getAs[Seq[String]](2)
+              x.getAs[Timestamp](1),
+              x.getAs[String](2),
+              x.getAs[Seq[String]](3)
                 .filter(_.length>0)
                 .map(y => new PorterStemmer().stem(y))))
           .toDF
-          .select($"_1".as("timestamp"), $"_2".as("text"), $"_3".as("words"))
+          .select($"_1".as("timestamp"), $"_2".as("receivedat"), $"_3".as("text"), $"_4".as("words"))
 
           
         lrModel.transform(vectorizerModel.transform(preprocessed))
           .withColumn("b_prediction", $"prediction".cast(BooleanType))
           .drop("prediction")
           .withColumnRenamed("b_prediction", "prediction")
-          .select("timestamp", "text", "prediction")
+          .select("timestamp", "text", "prediction", "receivedat")
           .withColumn("processedat", current_timestamp())
           .write
           .format("jdbc")
@@ -139,7 +141,8 @@ object Main {
       .option("kafka.bootstrap.servers", "localhost:9092")
       .option("subscribe", "binance-BTCUSDT")
       .load
-      .select(from_json($"value".cast("string"), binance_schema).alias("value"))
+      .withColumn("receivedat", current_timestamp())
+      .select($"receivedat", from_json($"value".cast("string"), binance_schema).alias("value"))
       .withColumn("askprice", $"value.a".cast(DoubleType))
       .withColumn("askqty", $"value.A".cast(DoubleType))
       .withColumn("bidprice", $"value.b".cast(DoubleType))
