@@ -1,6 +1,7 @@
 CREATE TABLE IF NOT EXISTS tweets (
  id             BIGSERIAL              NOT NULL,
  timestamp      TIMESTAMPTZ         NOT NULL,
+ processedat    TIMESTAMPTZ,
  text           TEXT                NOT NULL,
  prediction     BOOLEAN,
  PRIMARY KEY(timestamp, id)
@@ -9,6 +10,7 @@ CREATE TABLE IF NOT EXISTS tweets (
 CREATE TABLE IF NOT EXISTS prices (
  id             BIGSERIAL              NOT NULL,
  timestamp      TIMESTAMPTZ         NOT NULL,
+ processedat    TIMESTAMPTZ,
  askprice       DOUBLE PRECISION    NOT NULL,
  askqty         DOUBLE PRECISION    NOT NULL,
  bidprice       DOUBLE PRECISION    NOT NULL,

@@ -122,6 +122,7 @@ object Main {
           .drop("prediction")
           .withColumnRenamed("b_prediction", "prediction")
           .select("timestamp", "text", "prediction")
+          .withColumn("processedat", current_timestamp())
           .write
           .format("jdbc")
           .option("url", "jdbc:postgresql://127.0.0.1:5432/postgres")
@@ -149,6 +150,7 @@ object Main {
       .writeStream
       .foreachBatch { (batchDF: DataFrame, batchId: Long) =>
         batchDF
+          .withColumn("processedat", current_timestamp())
           .write
           .format("jdbc")
           .option("url", "jdbc:postgresql://127.0.0.1:5432/postgres")
