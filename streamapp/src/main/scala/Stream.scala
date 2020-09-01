@@ -15,7 +15,7 @@ import _root_.java.sql.Timestamp
 import org.apache.spark.ml.feature.Tokenizer
 import opennlp.tools.stemmer.PorterStemmer
 import org.apache.spark.ml.classification.LogisticRegressionModel
-// import org.apache.spark.ml.feature.Word2VecModel
+import org.apache.spark.ml.feature.Word2VecModel
 import org.apache.spark.ml.feature.{CountVectorizer, CountVectorizerModel}
 import org.apache.spark.ml.feature.StopWordsRemover
 import org.apache.spark.ml.classification.LogisticRegression
@@ -24,7 +24,8 @@ object Main {
   def main(args: Array[String]) {
 
     val lrModel = LogisticRegressionModel.load("hdfs://localhost:9000/tmp/models/spark-logistic-regression-model")
-    val cvModel = CountVectorizerModel.load("hdfs://localhost:9000/tmp/models/spark-cv-model")
+    // val vectorozerModel = CountVectorizerModel.load("hdfs://localhost:9000/tmp/models/spark-cv-model")
+    val vectorizerModel = Word2VecModel.load("hdfs://localhost:9000/tmp/models/spark-cv-model")
 
     val tweets_schema = new StructType()
       .add("created_at", "string")
@@ -116,7 +117,7 @@ object Main {
           .select($"_1".as("timestamp"), $"_2".as("text"), $"_3".as("words"))
 
           
-        lrModel.transform(cvModel.transform(preprocessed))
+        lrModel.transform(vectorizerModel.transform(preprocessed))
           .withColumn("b_prediction", $"prediction".cast(BooleanType))
           .drop("prediction")
           .withColumnRenamed("b_prediction", "prediction")

@@ -20,7 +20,7 @@ import org.apache.spark.ml.feature.Tokenizer
 import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
 import opennlp.tools.stemmer.PorterStemmer
 import org.apache.spark.ml.classification.LogisticRegressionModel
-// import org.apache.spark.ml.feature.Word2VecModel
+import org.apache.spark.ml.feature.Word2VecModel
 import org.apache.spark.ml.feature.{CountVectorizer, CountVectorizerModel}
 
 object Main {
@@ -103,21 +103,21 @@ object Main {
                         .select($"_1".as("id"), $"_2".as("timestamp"), $"_3".as("words"), $"_4".as("label"))
 
     // Learn a mapping from words to Vectors.
-    // val word2VecModel = new Word2Vec()
-    //   .setInputCol("words")
-    //   .setOutputCol("features")
-    //   .setVectorSize(3)
-    //   .setMinCount(0)
-    //   .fit(preprocessed)
-    // val allData = word2VecModel.transform(preprocessed)
-    
-    val cvModel: CountVectorizerModel = new CountVectorizer()
+    val vectorizerModel = new Word2Vec()
       .setInputCol("words")
       .setOutputCol("features")
-      .setVocabSize(3)
-      .setMinDF(2)
+      .setVectorSize(3)
+      .setMinCount(0)
       .fit(preprocessed)
-    val allData = cvModel.transform(preprocessed)
+    val allData = vectorizerModel.transform(preprocessed)
+    
+    // val vectorizerModel: CountVectorizerModel = new CountVectorizer()
+    //   .setInputCol("words")
+    //   .setOutputCol("features")
+    //   .setVocabSize(3)
+    //   .setMinDF(2)
+    //   .fit(preprocessed)
+    // val allData = vectorizerModel.transform(preprocessed)
 
     // trend per minute
     // val trendPerMin1 = pricesDB.filter(expr("lastmasktrend is not null"))
@@ -139,7 +139,7 @@ object Main {
     //   }).withColumnRenamed("_1", "id").withColumnRenamed("_2", "timestamp").withColumnRenamed("_3", "words").withColumnRenamed("_4", "label")
 
 
-    // allData = cvModel.transform(newdata)
+    // allData = vectorizerModel.transform(newdata)
 
     val seed = 1287638
     val Array(trainingData, testData) = allData.randomSplit(Array(0.7, 0.3), seed)
@@ -167,10 +167,10 @@ object Main {
     val finalModel = lr.fit(allData)
 
     finalModel.write.overwrite().save("hdfs://localhost:9000/tmp/models/spark-logistic-regression-model")
-    cvModel.write.overwrite().save("hdfs://localhost:9000/tmp/models/spark-cv-model")
+    vectorizerModel.write.overwrite().save("hdfs://localhost:9000/tmp/models/spark-cv-model")
 
     // val loadedModel = LogisticRegressionModel.load("hdfs://localhost:9000/tmp/models/spark-logistic-regression-model")
-    // val loadedcvModel = CountVectorizerModel.load("hdfs://localhost:9000/tmp/models/spark-cv-model")
+    // val loadedvectorizerModel = CountVectorizerModel.load("hdfs://localhost:9000/tmp/models/spark-cv-model")
 
   }
 
