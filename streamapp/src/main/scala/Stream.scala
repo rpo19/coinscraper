@@ -64,7 +64,7 @@ object Main {
       .add("B", "string")
       .add("a", "string")
       .add("A", "string")
-      .add("timestamp", "double")
+      .add("timestamp", "string")
 
     val spark = SparkSession
       .builder()
@@ -148,7 +148,10 @@ object Main {
       .withColumn("bidprice", $"value.b".cast(DoubleType))
       .withColumn("bidqty", $"value.B".cast(DoubleType))
       .withColumn("symbol", $"value.s")
-      .withColumn("timestamp", current_timestamp())
+      .withColumn(
+        "timestamp",
+        ($"value.timestamp".cast(DoubleType)).cast(TimestampType)
+      )
       .drop("value")
       .writeStream
       .foreachBatch { (batchDF: DataFrame, batchId: Long) =>
