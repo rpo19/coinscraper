@@ -4,3 +4,4 @@ PySpark
 jupyter
 findspark
 kafka-python
+click
