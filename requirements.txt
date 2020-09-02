@@ -1,7 +1,0 @@
-python-binance
-tweepy
-PySpark
-jupyter
-findspark
-kafka-python
-click
