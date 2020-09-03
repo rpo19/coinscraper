@@ -20,12 +20,68 @@ import org.apache.spark.ml.feature.{CountVectorizer, CountVectorizerModel}
 import org.apache.spark.ml.feature.StopWordsRemover
 import org.apache.spark.ml.classification.LogisticRegression
 
-object Main {
-  def main(args: Array[String]) {
+import picocli.CommandLine
+import picocli.CommandLine.Model.CommandSpec
+import picocli.CommandLine._
 
-    val lrModel = LogisticRegressionModel.load("hdfs://localhost:9000/tmp/models/spark-logistic-regression-model")
+import java.util.concurrent.Callable
+
+@Command(
+  name = "StreamApp",
+  version = Array("StreamApp v1.0"),
+  mixinStandardHelpOptions = true, // add --help and --version options
+  description = Array("Spark streaming tweets prices analyzer")
+)
+class Main extends Callable[Int] {
+
+  @Option(
+    names = Array("--lrmodel"),
+    paramLabel = "LOGISTIC_REGRESSION_MODEL_PATH",
+    description = Array("Logistic regression model path")
+  )
+  var lrModelPath =
+    "hdfs://localhost:9000/tmp/models/spark-logistic-regression-model"
+
+  @Option(
+    names = Array("--vcmodel"),
+    paramLabel = "VECTORIZER_MODEL_PATH",
+    description = Array("Vectorizer model path")
+  )
+  var vectorizerModelPath = "hdfs://localhost:9000/tmp/models/spark-cv-model"
+
+  @Option(
+    names = Array("--jdbcurl"),
+    paramLabel = "JDBCURL",
+    description = Array("Jdbc url to reach the database")
+  )
+  var jdbcUrl = "jdbc:postgresql://127.0.0.1:5432/postgres"
+
+  @Option(
+    names = Array("-k", "--kafka"),
+    paramLabel = "KAFKA_SERVERS",
+    description = Array("Kafka bootstrap servers (comma separeted if more than one)")
+  )
+  var kafkaBootstrapServers = "localhost:9092"
+
+  @Option(
+    names = Array("--tweets-topic"),
+    paramLabel = "TWEETS_TOPIC",
+    description = Array("Tweets kafka topic")
+  )
+  var tweetsTopic = "tweets-bitcoin"
+
+  @Option(
+    names = Array("--prices-topic"),
+    paramLabel = "PRICES_TOPIC",
+    description = Array("Prices kafka topic")
+  )
+  var pricesTopic = "binance-BTCUSDT"
+
+  def call(): Int = {
+
+    val lrModel = LogisticRegressionModel.load(lrModelPath)
     // val vectorozerModel = CountVectorizerModel.load("hdfs://localhost:9000/tmp/models/spark-cv-model")
-    val vectorizerModel = Word2VecModel.load("hdfs://localhost:9000/tmp/models/spark-cv-model")
+    val vectorizerModel = Word2VecModel.load(vectorizerModelPath)
 
     val tweets_schema = new StructType()
       .add("created_at", "string")
@@ -78,7 +134,7 @@ object Main {
 
     val pricesDB = spark.read
       .format("jdbc")
-      .option("url", "jdbc:postgresql://127.0.0.1:5432/postgres")
+      .option("url", jdbcUrl)
       .option("dbtable", "prices")
       .option("user", "postgres")
       .option("password", "password")
@@ -94,11 +150,14 @@ object Main {
 
     val tweets = spark.readStream
       .format("kafka")
-      .option("kafka.bootstrap.servers", "localhost:9092")
-      .option("subscribe", "tweets-bitcoin")
+      .option("kafka.bootstrap.servers", kafkaBootstrapServers)
+      .option("subscribe", tweetsTopic)
       .load
       .withColumn("receivedat", current_timestamp())
-      .select($"receivedat", from_json($"value".cast("string"), tweets_schema).alias("value"))
+      .select(
+        $"receivedat",
+        from_json($"value".cast("string"), tweets_schema).alias("value")
+      )
       .withColumn(
         "timestamp",
         ($"value.timestamp_ms".cast(LongType) / 1000).cast(TimestampType)
@@ -107,19 +166,29 @@ object Main {
       .select("timestamp", "value.text", "receivedat")
       .writeStream
       .foreachBatch { (batchDF: DataFrame, batchId: Long) =>
-        val preprocessed = remover.transform(tokenizer.transform(batchDF))
+        val preprocessed = remover
+          .transform(tokenizer.transform(batchDF))
           .select("timestamp", "receivedat", "text", "words")
-          .map(x => (x.getAs[Timestamp](0),
+          .map(x =>
+            (
+              x.getAs[Timestamp](0),
               x.getAs[Timestamp](1),
               x.getAs[String](2),
               x.getAs[Seq[String]](3)
-                .filter(_.length>0)
-                .map(y => new PorterStemmer().stem(y))))
+                .filter(_.length > 0)
+                .map(y => new PorterStemmer().stem(y))
+            )
+          )
           .toDF
-          .select($"_1".as("timestamp"), $"_2".as("receivedat"), $"_3".as("text"), $"_4".as("words"))
+          .select(
+            $"_1".as("timestamp"),
+            $"_2".as("receivedat"),
+            $"_3".as("text"),
+            $"_4".as("words")
+          )
 
-          
-        lrModel.transform(vectorizerModel.transform(preprocessed))
+        lrModel
+          .transform(vectorizerModel.transform(preprocessed))
           .withColumn("b_prediction", $"prediction".cast(BooleanType))
           .drop("prediction")
           .withColumnRenamed("b_prediction", "prediction")
@@ -127,7 +196,7 @@ object Main {
           .withColumn("processedat", current_timestamp())
           .write
           .format("jdbc")
-          .option("url", "jdbc:postgresql://127.0.0.1:5432/postgres")
+          .option("url", jdbcUrl)
           .option("dbtable", "tweets")
           .option("user", "postgres")
           .option("password", "password")
@@ -138,11 +207,14 @@ object Main {
 
     val binance = spark.readStream
       .format("kafka")
-      .option("kafka.bootstrap.servers", "localhost:9092")
-      .option("subscribe", "binance-BTCUSDT")
+      .option("kafka.bootstrap.servers", kafkaBootstrapServers)
+      .option("subscribe", pricesTopic)
       .load
       .withColumn("receivedat", current_timestamp())
-      .select($"receivedat", from_json($"value".cast("string"), binance_schema).alias("value"))
+      .select(
+        $"receivedat",
+        from_json($"value".cast("string"), binance_schema).alias("value")
+      )
       .withColumn("askprice", $"value.a".cast(DoubleType))
       .withColumn("askqty", $"value.A".cast(DoubleType))
       .withColumn("bidprice", $"value.b".cast(DoubleType))
@@ -159,7 +231,7 @@ object Main {
           .withColumn("processedat", current_timestamp())
           .write
           .format("jdbc")
-          .option("url", "jdbc:postgresql://127.0.0.1:5432/postgres")
+          .option("url", jdbcUrl)
           .option("dbtable", "prices")
           .option("user", "postgres")
           .option("password", "password")
@@ -170,14 +242,14 @@ object Main {
 
     val lastTrendPerMinDB = spark.read
       .format("jdbc")
-      .option("url", "jdbc:postgresql://127.0.0.1:5432/postgres")
+      .option("url", jdbcUrl)
       .option("dbtable", "trendperminute")
       .option("user", "postgres")
       .option("password", "password")
       .load()
       .agg(max("timestamp"))
 
-    def currentmin() : Timestamp = {
+    def currentmin(): Timestamp = {
       val now = System.currentTimeMillis()
       return new Timestamp(now - now % 60000L)
     }
@@ -187,11 +259,14 @@ object Main {
       def run() = {
         val latestTime = lastTrendPerMinDB.take(1)(0)(0).asInstanceOf[Timestamp]
 
-        val step1 = if (latestTime == null)
+        val step1 =
+          if (latestTime == null)
             pricesDB.filter($"timestamp" < currentmin())
           else
-            pricesDB.filter($"timestamp" < currentmin()
-              && $"timestamp" >= new Timestamp(latestTime.getTime() + 60000L))
+            pricesDB.filter(
+              $"timestamp" < currentmin()
+                && $"timestamp" >= new Timestamp(latestTime.getTime() + 60000L)
+            )
 
         val step2 = step1
           .groupBy(window($"timestamp", "1 minute"))
@@ -201,15 +276,17 @@ object Main {
           .withColumnRenamed("avg(askprice)", "avgaskprice")
 
         val trendPerMin = step2
-          .join(step2
-            .withColumnRenamed("timestamp", "old_timestamp")
-            .withColumnRenamed("avgaskprice", "old_avgaskprice"))
+          .join(
+            step2
+              .withColumnRenamed("timestamp", "old_timestamp")
+              .withColumnRenamed("avgaskprice", "old_avgaskprice")
+          )
           .filter(expr("old_timestamp = timestamp - interval '1 minute'"))
           .withColumn("asktrend", $"avgaskprice" >= $"old_avgaskprice")
           .select("timestamp", "asktrend")
           .write
           .format("jdbc")
-          .option("url", "jdbc:postgresql://127.0.0.1:5432/postgres")
+          .option("url", jdbcUrl)
           .option("dbtable", "trendperminute")
           .option("user", "postgres")
           .option("password", "password")
@@ -225,6 +302,12 @@ object Main {
     binance.stop
     timer.cancel()
 
+    0
   }
+}
 
+object Main {
+  def main(args: Array[String]) {
+    System.exit(new CommandLine(new Main()).execute(args: _*))
+  }
 }
