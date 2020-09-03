@@ -1,5 +1,5 @@
 **/venv
-**/secret*
+**/secret*.py
 **/.ipynb*
 *app/project
 *app/target
