@@ -5,6 +5,7 @@ import json
 import secrets
 import time
 import click
+import sys
 
 @click.command()
 @click.option('-v', '--verbose', default=False, is_flag=True, help='Verbose mode')
@@ -16,9 +17,17 @@ def go(verbose, symbol, kafka_servers, kafka_topic):
 
     client = Client(secrets.api_key, secrets.api_secret)
 
-    producer = kafka.KafkaProducer(bootstrap_servers=kafka_servers,
-                            value_serializer=lambda x: 
-                            json.dumps(x).encode('utf-8'))
+    for i in range(0,10):
+        try:
+            producer = kafka.KafkaProducer(bootstrap_servers=kafka_servers,
+                                    value_serializer=lambda x: 
+                                    json.dumps(x).encode('utf-8'))
+            break
+        except:
+            print("ERROR while trying to connecting to kafka")
+            time.sleep(2)
+            if i == 9:
+                sys.exit(1)
 
     def process_message(msg):
         msg["timestamp"] = time.time()

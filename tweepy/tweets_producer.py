@@ -4,6 +4,8 @@ import kafka
 import json
 import secrets
 import click
+import sys
+import time
 
 @click.command()
 @click.option('-v', '--verbose', default=False, is_flag=True, help='Verbose mode')
@@ -16,9 +18,17 @@ def go(verbose, tweets_filter, kafka_servers, kafka_topic):
     auth = tweepy.OAuthHandler(secrets.consumer_key, secrets.consumer_secret)
     auth.set_access_token(secrets.access_token, secrets.access_secret)
 
-    producer = kafka.KafkaProducer(bootstrap_servers=kafka_servers,
-                            value_serializer=lambda x: 
-                            json.dumps(x).encode('utf-8'))
+    for i in range(0,10):
+        try:
+            producer = kafka.KafkaProducer(bootstrap_servers=kafka_servers,
+                                    value_serializer=lambda x: 
+                                    json.dumps(x).encode('utf-8'))
+            break
+        except:
+            print("ERROR while trying to connecting to kafka")
+            time.sleep(2)
+            if i == 9:
+                sys.exit(1)
 
     class TweetsStreamListener(tweepy.StreamListener):
 
