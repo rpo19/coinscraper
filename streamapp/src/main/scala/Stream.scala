@@ -141,6 +141,7 @@ class Main extends Callable[Int] {
 
     val pricesDB = spark.read
       .format("jdbc")
+      .option("driver", "org.postgresql.Driver")
       .option("url", jdbcUrl)
       .option("dbtable", "prices")
       .option("user", "postgres")
@@ -203,6 +204,7 @@ class Main extends Callable[Int] {
           .withColumn("processedat", current_timestamp())
           .write
           .format("jdbc")
+          .option("driver", "org.postgresql.Driver")
           .option("url", jdbcUrl)
           .option("dbtable", "tweets")
           .option("user", "postgres")
@@ -238,6 +240,7 @@ class Main extends Callable[Int] {
           .withColumn("processedat", current_timestamp())
           .write
           .format("jdbc")
+          .option("driver", "org.postgresql.Driver")
           .option("url", jdbcUrl)
           .option("dbtable", "prices")
           .option("user", "postgres")
@@ -249,6 +252,7 @@ class Main extends Callable[Int] {
 
     val lastTrendPerMinDB = spark.read
       .format("jdbc")
+      .option("driver", "org.postgresql.Driver")
       .option("url", jdbcUrl)
       .option("dbtable", "trendperminute")
       .option("user", "postgres")
@@ -293,6 +297,7 @@ class Main extends Callable[Int] {
           .select("timestamp", "asktrend")
           .write
           .format("jdbc")
+          .option("driver", "org.postgresql.Driver")
           .option("url", jdbcUrl)
           .option("dbtable", "trendperminute")
           .option("user", "postgres")
