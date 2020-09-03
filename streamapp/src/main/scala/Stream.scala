@@ -57,6 +57,13 @@ class Main extends Callable[Int] {
   var jdbcUrl = "jdbc:postgresql://127.0.0.1:5432/postgres"
 
   @Option(
+    names = Array("--jdbcpassword"),
+    paramLabel = "JDBCPASSWORD",
+    description = Array("Jdbc password")
+  )
+  var jdbcPassword = "password"
+
+  @Option(
     names = Array("-k", "--kafka"),
     paramLabel = "KAFKA_SERVERS",
     description = Array("Kafka bootstrap servers (comma separeted if more than one)")
@@ -137,7 +144,7 @@ class Main extends Callable[Int] {
       .option("url", jdbcUrl)
       .option("dbtable", "prices")
       .option("user", "postgres")
-      .option("password", "password")
+      .option("password", jdbcPassword)
       .load()
 
     val tokenizer = new Tokenizer()
