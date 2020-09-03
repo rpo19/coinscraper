@@ -7,7 +7,7 @@ services:
       - ./099_create_tables.sql:/docker-entrypoint-initdb.d/099_create_tables.sql
     ports:
       - 5432:5432
-    restart: unless-stopped
+    restart: "on-failure"
     environment:
       POSTGRES_PASSWORD: password
   zookeeper:
@@ -18,7 +18,7 @@ services:
       - 'zookeeper_data:/bitnami'
     environment:
       - ALLOW_ANONYMOUS_LOGIN=yes
-    restart: unless-stopped
+    restart: "on-failure"
   kafka:
     image: 'docker.io/bitnami/kafka:2-debian-10'
     ports:
@@ -33,7 +33,7 @@ services:
       - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://192.168.1.180:9092
     depends_on:
       - zookeeper
-    restart: unless-stopped
+    restart: "on-failure"
   binance_producer:
     build: ./binance
     volumes:
@@ -41,7 +41,7 @@ services:
     depends_on:
       - kafka
     command: -k 192.168.1.180:9092
-    restart: unless-stopped
+    restart: "on-failure"
   tweets_producer:
     build: ./tweepy
     volumes:
@@ -49,7 +49,7 @@ services:
     depends_on:
       - kafka
     command: -k 192.168.1.180:9092
-    restart: unless-stopped
+    restart: "on-failure"
 
 volumes:
   timescale_data:
