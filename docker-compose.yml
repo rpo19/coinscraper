@@ -113,6 +113,14 @@ services:
       SERVICE_PRECONDITION: "namenode:9870"
     env_file:
       - ./hadoop.env
+  grafana:
+    image: grafana/grafana:7.1.5-ubuntu
+    restart: on-failure
+    volumes:
+      - grafana_data:/var/lib/grafana
+    ports:
+      - 3000:3000
+
 
 volumes:
   timescale_data:
@@ -120,3 +128,4 @@ volumes:
   kafka_data:
   hadoop_namenode:
   hadoop_datanode:
+  grafana_data:
