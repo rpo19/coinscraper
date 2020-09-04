@@ -61,8 +61,8 @@ services:
     image: bde2020/spark-worker:3.0.0-hadoop3.2
     depends_on:
       - spark
-    ports:
-      - "8081:8081"
+    # ports:
+    #   - "8081:8081"
     environment:
       - "SPARK_MASTER=spark://spark:7077"
       - "SPARK_WORKER_CORES=4"
