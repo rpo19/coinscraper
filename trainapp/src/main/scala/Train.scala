@@ -23,8 +23,50 @@ import org.apache.spark.ml.classification.LogisticRegressionModel
 import org.apache.spark.ml.feature.Word2VecModel
 import org.apache.spark.ml.feature.{CountVectorizer, CountVectorizerModel}
 
-object Main {
-  def main(args: Array[String]) {
+import picocli.CommandLine
+import picocli.CommandLine.Model.CommandSpec
+import picocli.CommandLine._
+
+import java.util.concurrent.Callable
+
+@Command(
+  name = "StreamApp TrainApp",
+  version = Array("StreamApp TrainApp v1.0"),
+  mixinStandardHelpOptions = true, // add --help and --version options
+  description = Array("StreamApp model training app")
+)
+class Main extends Callable[Int] {
+
+  @Option(
+    names = Array("--lrmodel"),
+    paramLabel = "LOGISTIC_REGRESSION_MODEL_PATH",
+    description = Array("Logistic regression model path")
+  )
+  var lrModelPath =
+    "hdfs://localhost:9000/tmp/models/spark-logistic-regression-model"
+
+  @Option(
+    names = Array("--vcmodel"),
+    paramLabel = "VECTORIZER_MODEL_PATH",
+    description = Array("Vectorizer model path")
+  )
+  var vectorizerModelPath = "hdfs://localhost:9000/tmp/models/spark-cv-model"
+
+  @Option(
+    names = Array("--jdbcurl"),
+    paramLabel = "JDBCURL",
+    description = Array("Jdbc url to reach the database")
+  )
+  var jdbcUrl = "jdbc:postgresql://127.0.0.1:5432/postgres"
+
+  @Option(
+    names = Array("--jdbcpassword"),
+    paramLabel = "JDBCPASSWORD",
+    description = Array("Jdbc password")
+  )
+  var jdbcPassword = "password"
+
+  def call(): Int = {
 
     val spark = SparkSession
       .builder()
@@ -38,27 +80,30 @@ object Main {
 
     val pricesDB = spark.read
       .format("jdbc")
-      .option("url", "jdbc:postgresql://127.0.0.1:5432/postgres")
+      .option("driver", "org.postgresql.Driver")
+      .option("url", jdbcUrl)
       .option("dbtable", "prices")
       .option("user", "postgres")
-      .option("password", "password")
+      .option("password", jdbcPassword)
       .load()
 
     // Input data: Each row is a bag of words from a sentence or document.
     val tweetsDB = spark.read
       .format("jdbc")
-      .option("url", "jdbc:postgresql://127.0.0.1:5432/postgres")
+      .option("driver", "org.postgresql.Driver")
+      .option("url", jdbcUrl)
       .option("dbtable", "tweets")
       .option("user", "postgres")
-      .option("password", "password")
+      .option("password", jdbcPassword)
       .load()
 
     val trendperminDB = spark.read
       .format("jdbc")
-      .option("url", "jdbc:postgresql://127.0.0.1:5432/postgres")
+      .option("driver", "org.postgresql.Driver")
+      .option("url", jdbcUrl)
       .option("dbtable", "trendperminute")
       .option("user", "postgres")
-      .option("password", "password")
+      .option("password", jdbcPassword)
       .load()
 
     // def myf(x: Row) : (Long, Timestamp, String, Integer) = {
@@ -167,14 +212,19 @@ object Main {
 
     val finalModel = lr.fit(allData)
 
-    finalModel.write.overwrite().save("hdfs://localhost:9000/tmp/models/spark-logistic-regression-model")
-    vectorizerModel.write.overwrite().save("hdfs://localhost:9000/tmp/models/spark-cv-model")
+    finalModel.write.overwrite().save(lrModelPath)
+    vectorizerModel.write.overwrite().save(vectorizerModelPath)
 
     // val loadedModel = LogisticRegressionModel.load("hdfs://localhost:9000/tmp/models/spark-logistic-regression-model")
     // val loadedvectorizerModel = CountVectorizerModel.load("hdfs://localhost:9000/tmp/models/spark-cv-model")
-
+    
+    0
   }
 
 }
 
-
+object Main {
+  def main(args: Array[String]) {
+    System.exit(new CommandLine(new Main()).execute(args: _*))
+  }
+}
