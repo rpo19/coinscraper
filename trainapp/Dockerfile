@@ -9,6 +9,8 @@ ENV PATH /usr/local/sbt/bin:${PATH}
 
 WORKDIR /spark/bin
 
+ENV SPARK_EXECUTOR_MEMORY 1g
+
 COPY ./submit.sh /submit.sh
 RUN chmod 755 /submit.sh
 
