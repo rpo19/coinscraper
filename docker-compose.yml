@@ -80,18 +80,6 @@ services:
       --jdbcurl jdbc:postgresql://192.168.1.180:5432/postgres
       --kafka 192.168.1.180:9092
     restart: "on-failure"
-  trainapp:
-    build: ./trainapp
-    depends_on:
-      - spark
-    environment:
-      - "SPARK_MASTER=spark://spark:7077"
-      - "SPARK_EXECUTOR_MEMORY=4g"
-    command: >
-      --lrmodel hdfs://192.168.1.180:9000/tmp/models/spark-logistic-regression-model
-      --vcmodel hdfs://192.168.1.180:9000/tmp/models/spark-cv-model
-      --jdbcurl jdbc:postgresql://192.168.1.180:5432/postgres
-    restart: "no"
   namenode:
     image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
     container_name: namenode
