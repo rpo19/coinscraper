@@ -35,7 +35,9 @@ def go(verbose, tweets_filter, kafka_servers, kafka_topic):
         def on_status(self, tweet):
             if verbose:
                 print(json.dumps(tweet._json))
-            producer.send(kafka_topic, value=tweet._json)
+            msg = tweet._json
+            msg["receivedat"] = time.time()
+            producer.send(kafka_topic, value=msg)
 
     tweetsStreamListener = TweetsStreamListener()
     twStream = tweepy.Stream(auth = auth, listener=tweetsStreamListener)

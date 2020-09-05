@@ -119,6 +119,7 @@ class Main extends Callable[Int] {
       .add("filter_level", "string")
       .add("lang", "string")
       .add("timestamp_ms", "string")
+      .add("receivedat", "string")
 
     val binance_schema = new StructType()
       .add("u", "long")
@@ -161,16 +162,17 @@ class Main extends Callable[Int] {
       .option("kafka.bootstrap.servers", kafkaBootstrapServers)
       .option("subscribe", tweetsTopic)
       .load
-      .withColumn("receivedat", current_timestamp())
       .select(
-        $"receivedat",
         from_json($"value".cast("string"), tweets_schema).alias("value")
       )
       .withColumn(
         "timestamp",
         ($"value.timestamp_ms".cast(LongType) / 1000).cast(TimestampType)
       )
-      .drop("value.timestamp_ms")
+      .withColumn(
+        "receivedat",
+        ($"value.receivedat".cast(DoubleType)).cast(TimestampType)
+      )
       .select("timestamp", "value.text", "receivedat")
       .writeStream
       .foreachBatch { (batchDF: DataFrame, batchId: Long) =>
@@ -219,9 +221,7 @@ class Main extends Callable[Int] {
       .option("kafka.bootstrap.servers", kafkaBootstrapServers)
       .option("subscribe", pricesTopic)
       .load
-      .withColumn("receivedat", current_timestamp())
       .select(
-        $"receivedat",
         from_json($"value".cast("string"), binance_schema).alias("value")
       )
       .withColumn("askprice", $"value.a".cast(DoubleType))
