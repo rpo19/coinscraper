@@ -34,7 +34,7 @@ services:
     depends_on:
       - zookeeper
     restart: "on-failure"
-  binance_producer:
+  binance-producer:
     build: ./binance
     volumes:
       - ./binance/secrets.py:/home/secrets.py:ro
@@ -42,7 +42,7 @@ services:
       - kafka
     command: -k 192.168.1.180:9092
     restart: "on-failure"
-  tweets_producer:
+  tweets-producer:
     build: ./tweepy
     volumes:
       - ./tweepy/secrets.py:/home/secrets.py:ro
