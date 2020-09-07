@@ -42,15 +42,14 @@ class Main extends Callable[Int] {
     paramLabel = "LOGISTIC_REGRESSION_MODEL_PATH",
     description = Array("Logistic regression model path")
   )
-  var lrModelPath =
-    "hdfs://localhost:9000/tmp/models/spark-logistic-regression-model"
+  var lrModelPath : String = "/tmp/models/spark-logistic-regression-model"
 
   @Option(
     names = Array("--vcmodel"),
     paramLabel = "VECTORIZER_MODEL_PATH",
     description = Array("Vectorizer model path")
   )
-  var vectorizerModelPath = "hdfs://localhost:9000/tmp/models/spark-cv-model"
+  var vectorizerModelPath : String = "/tmp/models/spark-cv-model"
 
   @Option(
     names = Array("--jdbcurl"),
