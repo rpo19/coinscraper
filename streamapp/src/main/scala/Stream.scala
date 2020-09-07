@@ -19,6 +19,7 @@ import org.apache.spark.ml.feature.Word2VecModel
 import org.apache.spark.ml.feature.{CountVectorizer, CountVectorizerModel}
 import org.apache.spark.ml.feature.StopWordsRemover
 import org.apache.spark.ml.classification.LogisticRegression
+import org.apache.spark.sql.{Dataset,Row}
 
 import picocli.CommandLine
 import picocli.CommandLine.Model.CommandSpec
@@ -39,15 +40,14 @@ class Main extends Callable[Int] {
     paramLabel = "LOGISTIC_REGRESSION_MODEL_PATH",
     description = Array("Logistic regression model path")
   )
-  var lrModelPath =
-    "hdfs://localhost:9000/tmp/models/spark-logistic-regression-model"
+  var lrModelPath : String = _
 
   @Option(
     names = Array("--vcmodel"),
     paramLabel = "VECTORIZER_MODEL_PATH",
     description = Array("Vectorizer model path")
   )
-  var vectorizerModelPath = "hdfs://localhost:9000/tmp/models/spark-cv-model"
+  var vectorizerModelPath : String = _
 
   @Option(
     names = Array("--jdbcurl"),
@@ -66,7 +66,9 @@ class Main extends Callable[Int] {
   @Option(
     names = Array("-k", "--kafka"),
     paramLabel = "KAFKA_SERVERS",
-    description = Array("Kafka bootstrap servers (comma separeted if more than one)")
+    description = Array(
+      "Kafka bootstrap servers (comma separeted if more than one)"
+    )
   )
   var kafkaBootstrapServers = "localhost:9092"
 
@@ -86,9 +88,23 @@ class Main extends Callable[Int] {
 
   def call(): Int = {
 
-    val lrModel = LogisticRegressionModel.load(lrModelPath)
-    // val vectorozerModel = CountVectorizerModel.load("hdfs://localhost:9000/tmp/models/spark-cv-model")
-    val vectorizerModel = Word2VecModel.load(vectorizerModelPath)
+    var loadedModels = true
+    var lrModel : LogisticRegressionModel = null
+    var vectorizerModel : Word2VecModel = null
+
+    try {
+
+      lrModel = LogisticRegressionModel.load(lrModelPath)
+      // val vectorozerModel = CountVectorizerModel.load("hdfs://localhost:9000/tmp/models/spark-cv-model")
+      vectorizerModel = Word2VecModel.load(vectorizerModelPath)
+
+    } catch {
+      case _: Throwable => {
+        loadedModels = false
+      }
+    }
+
+    println("loadedModels: " + loadedModels)
 
     val tweets_schema = new StructType()
       .add("created_at", "string")
@@ -176,35 +192,42 @@ class Main extends Callable[Int] {
       .select("timestamp", "value.text", "receivedat")
       .writeStream
       .foreachBatch { (batchDF: DataFrame, batchId: Long) =>
-        val preprocessed = remover
-          .transform(tokenizer.transform(batchDF))
-          .select("timestamp", "receivedat", "text", "words")
-          .map(x =>
-            (
-              x.getAs[Timestamp](0),
-              x.getAs[Timestamp](1),
-              x.getAs[String](2),
-              x.getAs[Seq[String]](3)
-                .filter(_.length > 0)
-                .map(y => new PorterStemmer().stem(y))
+        var toWrite: Dataset[Row] = null
+        if (loadedModels) {
+          val preprocessed = remover
+            .transform(tokenizer.transform(batchDF))
+            .select("timestamp", "receivedat", "text", "words")
+            .map(x =>
+              (
+                x.getAs[Timestamp](0),
+                x.getAs[Timestamp](1),
+                x.getAs[String](2),
+                x.getAs[Seq[String]](3)
+                  .filter(_.length > 0)
+                  .map(y => new PorterStemmer().stem(y))
+              )
             )
-          )
-          .toDF
-          .select(
-            $"_1".as("timestamp"),
-            $"_2".as("receivedat"),
-            $"_3".as("text"),
-            $"_4".as("words")
-          )
+            .toDF
+            .select(
+              $"_1".as("timestamp"),
+              $"_2".as("receivedat"),
+              $"_3".as("text"),
+              $"_4".as("words")
+            )
 
-        lrModel
-          .transform(vectorizerModel.transform(preprocessed))
-          .withColumn("b_prediction", $"prediction".cast(BooleanType))
-          .drop("prediction")
-          .withColumnRenamed("b_prediction", "prediction")
-          .select("timestamp", "text", "prediction", "receivedat")
-          .withColumn("processedat", current_timestamp())
-          .write
+          toWrite = lrModel
+            .transform(vectorizerModel.transform(preprocessed))
+            .withColumn("b_prediction", $"prediction".cast(BooleanType))
+            .drop("prediction")
+            .withColumnRenamed("b_prediction", "prediction")
+            .select("timestamp", "text", "prediction", "receivedat")
+            .withColumn("processedat", current_timestamp())
+
+        } else {
+          toWrite = batchDF
+        }
+
+        toWrite.write
           .format("jdbc")
           .option("driver", "org.postgresql.Driver")
           .option("url", jdbcUrl)
