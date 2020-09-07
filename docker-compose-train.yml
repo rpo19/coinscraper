@@ -2,8 +2,6 @@ version: "3"
 services:
   trainapp:
     build: ./trainapp
-    depends_on:
-      - spark
     environment:
       - "SPARK_MASTER=spark://spark:7077"
       - "SPARK_EXECUTOR_MEMORY=4g"

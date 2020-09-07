@@ -40,7 +40,7 @@ services:
       - ./binance/secrets.py:/home/secrets.py:ro
     depends_on:
       - kafka
-    command: -k 192.168.1.180:9092
+    command: -k kafka:9092
     restart: "on-failure"
   tweets-producer:
     build: ./tweepy
@@ -48,7 +48,7 @@ services:
       - ./tweepy/secrets.py:/home/secrets.py:ro
     depends_on:
       - kafka
-    command: -k 192.168.1.180:9092
+    command: -k kafka:9092
     restart: "on-failure"
   spark:
     image: bde2020/spark-master:3.0.0-hadoop3.2
@@ -65,44 +65,37 @@ services:
     #   - "8081:8081"
     environment:
       - "SPARK_MASTER=spark://spark:7077"
-      - "SPARK_WORKER_CORES=4"
-      - "SPARK_WORKER_MEMORY=4g"
+      - "SPARK_WORKER_CORES=1"
+      - "SPARK_WORKER_MEMORY=1g"
+    volumes:
+      - spark_models:/models
   streamapp:
     build: ./streamapp
     depends_on:
       - spark
     environment:
       - "SPARK_MASTER=spark://spark:7077"
-      - "SPARK_EXECUTOR_MEMORY=4g"
+      - "SPARK_EXECUTOR_MEMORY=1g"
     command: >
-      --lrmodel hdfs://192.168.1.180:9000/tmp/models/spark-logistic-regression-model
-      --vcmodel hdfs://192.168.1.180:9000/tmp/models/spark-cv-model
-      --jdbcurl jdbc:postgresql://192.168.1.180:5432/postgres
-      --kafka 192.168.1.180:9092
+      --lrmodel /models/spark-logistic-regression-model
+      --vcmodel /models/spark-cv-model
+      --jdbcurl jdbc:postgresql://timescale:5432/postgres
+      --kafka kafka:9092
     restart: "on-failure"
-  namenode:
-    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
-    container_name: namenode
-    restart: on-failure
-    ports:
-      - 9870:9870
-      - 9000:9000
     volumes:
-      - hadoop_namenode:/hadoop/dfs/name
+      - spark_models:/models
+  trainapp:
+    build: ./trainapp
     environment:
-      - CLUSTER_NAME=test
-    env_file:
-      - ./hadoop.env
-  datanode:
-    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
-    container_name: datanode
-    restart: on-failure
+      - "SPARK_MASTER=spark://spark:7077"
+      - "SPARK_EXECUTOR_MEMORY=1g"
+    command: >
+      --lrmodel /models/spark-logistic-regression-model
+      --vcmodel /models/spark-cv-model
+      --jdbcurl jdbc:postgresql://timescale:5432/postgres
+    restart: "no"
     volumes:
-      - hadoop_datanode:/hadoop/dfs/data
-    environment:
-      SERVICE_PRECONDITION: "namenode:9870"
-    env_file:
-      - ./hadoop.env
+      - spark_models:/models
   grafana:
     image: grafana/grafana:7.1.5-ubuntu
     restart: on-failure
@@ -119,3 +112,4 @@ volumes:
   hadoop_namenode:
   hadoop_datanode:
   grafana_data:
+  spark_models:
