@@ -11,7 +11,6 @@ CREATE TABLE IF NOT EXISTS tweets (
 CREATE TABLE IF NOT EXISTS prices (
  id             BIGSERIAL              NOT NULL,
  timestamp      TIMESTAMPTZ         NOT NULL,
- receivedat    TIMESTAMPTZ,
  processedat    TIMESTAMPTZ,
  askprice       DOUBLE PRECISION    NOT NULL,
  askqty         DOUBLE PRECISION    NOT NULL,
