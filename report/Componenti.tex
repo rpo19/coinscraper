@@ -68,4 +68,20 @@ necessita di rileggere i dati da disco ma utilizza una cache in memoria \cite{sp
 
 \subsection{TimescaleDB}
 
+TimescaleDB è un database relazionale open-source ottimizzato per dati di tipo time-series
+offrendo strutture adeguate al tipo di dati così da incrementare le performance dalla ricerca
+all'inserimento fino allo storage; ad esempio permette di impostare un intervallo di tempo
+dopo il quale i dati vengono compressi \cite{timescale}.
+\\
+Si basa su PostgreSQL, noto database relazionale open-source \cite{postgresql}, più precisamente
+ne è un estensione. Per questo motivo TimescaleDB risulta relativamente semplice da utilizzare
+per coloro che hanno già avuto esperienza con PostgreSQL ed è inoltre compatibile con i client
+supportati da PostgreSQL.
+\\
+Ciò semplifica la connessione con l'applicazione Spark che grazie al module Spark SQL è in grado
+di utilizzare driver JDBC per intergire con database relazionali tra cui PostgreSQL
+\cite{spark_sql}.
+
 \subsection{Grafana}
+
+% prima definire query
