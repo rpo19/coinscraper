@@ -1,0 +1,43 @@
+\documentclass[12pt]{article}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+% \usepackage{graphicx}
+% \usepackage{setspace}
+% \usepackage{wrapfig}
+% %\usepackage[utf8]{inputenc} %utf8 % lettere accentate da tastiera
+% \usepackage[italian]{babel} % lingua del documento
+% \usepackage{dirtree}
+% \usepackage{caption}
+% \usepackage{subcaption}
+
+% \graphicspath{ {images/} }
+
+\title{%
+    Big Data Velocity\\
+    \large Ottenimento e analisi di dati in streaming}
+
+\begin{document}
+\maketitle
+\pagenumbering{roman}
+\tableofcontents
+
+\newpage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+\input{Introduzione}
+\include{Dati}
+\include{Componenti}
+\include{Risultati}
+\include{Conclusioni}
+
+%\include capitolo risultati/script prodotti
+%\include conclusioni
+
+%%aggiungere un capitolo con i software prodotti??? e magari qualcosa sui test??
+
+\bibliography{Report}
+\bibliographystyle{ieeetr}
+
+%\nocite{*}
+
+\end{document}

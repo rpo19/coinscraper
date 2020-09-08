@@ -1,0 +1,71 @@
+\section{Componenti software}
+
+Seguono le componenti software utilizzate e realizzate per raggiungere l'obiettivo.
+
+\subsection{Kafka}
+
+Apache Kafka è una piattaforma di streaming distribuita open-source
+(Apache 2.0 \cite{apache2_license}) che svolge il ruolo di message broker
+dove dei "producer" possono pubblicare messaggi, che verranno poi consumati per essere analizzati,
+su specifici topic. Ciò consente a più producer di pubblicare su topic distinti o sul medesimo,
+utile per esempio nel caso si desideri collezionare gli stessi dati da più fonti
+(in questo contesto aggiungere fonti secondarie potrebbe frazionare il rischio relativo
+all'interruzione dei dati riguardanti l'andamento della criptovaluta sul mercato).
+\\
+La scelta è ricaduta sul suddetto software perchè in grado di garantire
+high-availability, fault-tolerancy, ottime performance e la possibilità di configurare un cluster
+di più nodi scalabile quindi orizzontalmente. \cite{kafka_doc}
+\\
+In più grazie risulta ben integrato con Apache Spark, framework su cui si basa l'applicazione
+analitica, semplificando la ricezione dei messaggi dal broker.
+
+% La versione utilizzata è ...
+
+\subsubsection{Zookeeper}
+
+Apache Zookeeper è un software open-source, anch'esso distribuito sotto licenza
+Apache 2.0 \cite{apache2_license}, che nasce come "coordinatore" di sistemi distribuiti
+in grado di svolgere compiti come rendere disponibili configurazioni centralizzati ai vari
+componenti distribuiti. Zookeeper è al momento richiesto da Kafka per memorizzare metadati
+necessari al funzionamento del cluster \cite{kafka_zookeeper}.
+
+\subsection{Producers}
+
+Il ruolo dei producer consiste nel ricevere dati in streaming da determinate fonti e di
+pubblicarli prontamente su di un topic Kafka.
+\\
+Entrambi i producer sono stati realizzati in python per semplicità nell'utilizzo delle
+librerie fornite dalle fonti per l'acquisizione di dati in tempo reale.
+\\
+Allo scopo di valutare le performance dell'intero progetto entrambi i producer aggiungono
+ad ogni messaggio un campo contenente l'esatto momento di ricezione.
+
+\subsubsection{Binance producer}
+
+Binance producer riceve dati dalla piattaforma di exchange Binance \cite{binance}
+avvalendosi della libreria ufficiale per poi pubblicarli su Kafka.
+
+\subsubsection{Tweets producer}
+
+Tweets producer fa uso della libreria Tweepy \cite{tweepy} per ottenere tweets relativi
+ad un determinato filtro e poi pubblicarli su Kafka.
+
+\subsection{Spark}
+
+Apache Spark è un framework open-source per l'analisi di dati su larga scala che offre ottime
+performance sia per elaborazioni batch che in streaming. Offre API di alto livello nei lingiaggi
+Scala, Java, Python e R, e librerie aggiuntive come MLlib, che fornisce strumenti utili per il
+machine learning, Spark SQL, modulo per l'elaborazione di dati strutturati,
+e Structured Streaming basato su Spark SQL ma rivolto ai dati strutturati in streaming \cite{spark}.
+\\
+Le API Spark consentono di sviluppare applicazioni scalabili orizzontalmente, highly-available
+e fault-tolerant; infatti possono
+essere eseguite su cluster comprendenti diverse macchine.
+\\
+Spark risulta decisamente più performante del paradigma MapReduce soprattutto per quegli algoritmi
+che necessitano ripetute letture degli stessi dati per il fatto che al contrario di MapReduce non
+necessita di rileggere i dati da disco ma utilizza una cache in memoria \cite{spark_mapred}.
+
+\subsection{TimescaleDB}
+
+\subsection{Grafana}
