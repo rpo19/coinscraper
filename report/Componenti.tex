@@ -49,6 +49,39 @@ avvalendosi della libreria ufficiale per poi pubblicarli su Kafka.
 
 Tweets producer fa uso della libreria Tweepy \cite{tweepy} per ottenere tweets relativi
 ad un determinato filtro e poi pubblicarli su Kafka.
+\\
+La logica di entrambi i producer si può riassumere nelle seguenti fasi:
+\begin{enumerate}
+    \item Connessione alla fonte di dati
+    \item Connessione a Kafka
+    \item Definizione di una funziona da effettuare al ricevimento di nuovi messaggi che
+          principalmente si occuperà della pubblicazione del messaggio su Kafka
+\end{enumerate}
+
+Segue un estratto di codice da "Tweets producer":
+
+\begin{lstlisting}[language=python,firstnumber=1]
+# Connessione a Kafka
+producer = kafka.KafkaProducer(
+                bootstrap_servers=kafka_servers,
+                value_serializer=lambda x: 
+                json.dumps(x).encode('utf-8'))
+
+class TweetsStreamListener(tweepy.StreamListener):
+    # Definizione della funzione
+    def on_status(self, tweet):
+        if verbose:
+            print(json.dumps(tweet._json))
+        msg = tweet._json
+        msg["receivedat"] = time.time()
+        producer.send(kafka_topic, value=msg)
+
+tweetsStreamListener = TweetsStreamListener()
+# Connessione a Twitter
+twStream = tweepy.Stream(auth = auth,
+                listener=tweetsStreamListener)
+twStream.filter(track=tweets_filter)
+\end{lstlisting}
 
 \subsection{Spark}
 
