@@ -83,22 +83,6 @@ twStream = tweepy.Stream(auth = auth,
 twStream.filter(track=tweets_filter)
 \end{lstlisting}
 
-\subsection{Spark}
-
-Apache Spark è un framework open-source per l'analisi di dati su larga scala che offre ottime
-performance sia per elaborazioni batch che in streaming. Offre API di alto livello nei lingiaggi
-Scala, Java, Python e R, e librerie aggiuntive come MLlib, che fornisce strumenti utili per il
-machine learning, Spark SQL, modulo per l'elaborazione di dati strutturati,
-e Structured Streaming basato su Spark SQL ma rivolto ai dati strutturati in streaming \cite{spark}.
-\\
-Le API Spark consentono di sviluppare applicazioni scalabili orizzontalmente, highly-available
-e fault-tolerant; infatti possono
-essere eseguite su cluster comprendenti diverse macchine.
-\\
-Spark risulta decisamente più performante del paradigma MapReduce soprattutto per quegli algoritmi
-che necessitano ripetute letture degli stessi dati per il fatto che al contrario di MapReduce non
-necessita di rileggere i dati da disco ma utilizza una cache in memoria \cite{spark_mapred}.
-
 \subsection{TimescaleDB}
 
 TimescaleDB è un database relazionale open-source ottimizzato per dati di tipo time-series
@@ -115,6 +99,49 @@ Ciò semplifica la connessione con l'applicazione Spark che grazie al module Spa
 di utilizzare driver JDBC per intergire con database relazionali tra cui PostgreSQL
 \cite{spark_sql}.
 
+\subsection{Spark}
+
+Apache Spark è un framework open-source per l'analisi di dati su larga scala che offre ottime
+performance sia per elaborazioni batch che in streaming. Offre API di alto livello nei lingiaggi
+Scala, Java, Python e R, e librerie aggiuntive come MLlib, che fornisce strumenti utili per il
+machine learning, Spark SQL, modulo per l'elaborazione di dati strutturati,
+e Structured Streaming basato su Spark SQL ma rivolto ai dati strutturati in streaming \cite{spark}.
+\\
+Le API Spark consentono di sviluppare applicazioni scalabili orizzontalmente, highly-available
+e fault-tolerant; infatti possono
+essere eseguite su cluster comprendenti diverse macchine.
+\\
+Spark risulta decisamente più performante del paradigma MapReduce soprattutto per quegli algoritmi
+che necessitano ripetute letture degli stessi dati per il fatto che al contrario di MapReduce non
+necessita di rileggere i dati da disco ma utilizza una cache in memoria \cite{spark_mapred}.
+
+\subsubsection{StreamApp}
+
+Applicazione sviluppata utilizzando le API Scala di Apache Spark. Rappresenta il cuore del progetto:
+si occupa di ricevere, elaborare e analizzare sia i dati finanziari che i tweets.
+
+\subsubsection{TrainApp}
+
+Applicazione aggiuntiva anch'essa sviluppata utilizzando le API Scala di Apache Spark che si occupa
+del training di alcuni modelli utilizzati da StreamApp a partire dai dati ricevuti da essa.
+Per questo motivo StreamApp è necessariamente in grado di funzionare (parzialmente) anche in assenza
+di questi modelli cossicchè sia possibile ottenere una quantità di dati iniziale con cui allenare i
+modelli.
+
+\subsection{Spark Cluster}
+
+Al fine di eseguire applicazioni Spark in un cluster è necessario un nodo master ed uno o più nodi
+worker possibilmente distribuiti su più macchine.
+
+% il master di cosa si occupa,....
+
+\subsection{Spark Workers}
+
 \subsection{Grafana}
 
-% prima definire query
+Grafana è un software open-source che si occupa di operazioni di visualizzazione e analitiche
+di dati tra cui serie temporali. È qui utilizzato come dashboard per eseguire query verso
+TimescaleDB e permetterne una semplice e completa visualizzazione dei risultati.
+
+% schema grafico
+% docker-compose
