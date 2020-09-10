@@ -109,7 +109,8 @@ e Structured Streaming basato su Spark SQL ma rivolto ai dati strutturati in str
 \\
 Le API Spark consentono di sviluppare applicazioni scalabili orizzontalmente, highly-available
 e fault-tolerant; infatti possono
-essere eseguite su cluster comprendenti diverse macchine.
+essere eseguite su cluster comprendenti diverse macchine tra cui almeno un \textbf{master} ed un
+\textbf{worker}.
 \\
 Spark risulta decisamente più performante del paradigma MapReduce soprattutto per quegli algoritmi
 che necessitano ripetute letture degli stessi dati per il fatto che al contrario di MapReduce non
@@ -128,20 +129,20 @@ Per questo motivo StreamApp è necessariamente in grado di funzionare (parzialme
 di questi modelli cossicchè sia possibile ottenere una quantità di dati iniziale con cui allenare i
 modelli.
 
-\subsection{Spark Cluster}
-
-Al fine di eseguire applicazioni Spark in un cluster è necessario un nodo master ed uno o più nodi
-worker possibilmente distribuiti su più macchine.
-
-% il master di cosa si occupa,....
-
-\subsection{Spark Workers}
-
 \subsection{Grafana}
 
 Grafana è un software open-source che si occupa di operazioni di visualizzazione e analitiche
 di dati tra cui serie temporali. È qui utilizzato come dashboard per eseguire query verso
 TimescaleDB e permetterne una semplice e completa visualizzazione dei risultati.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[
+		height=10cm,
+		keepaspectratio,
+    ]{ad_schema.png}
+    \caption{Schema delle componenti principali}
+\end{figure}
 
 % schema grafico
 % docker-compose
