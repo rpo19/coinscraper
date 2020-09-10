@@ -1,4 +1,27 @@
-\subsection{Applicazioni}
+\subsection{Applicazione}
+
+L'applicazione principale del progetto è la StreamApp composta principalmente da due Streaming
+Query e da un task eseguito periodicamente.
+
+\subsection{Streaming Query}
+
+Grazie a Spark Structured Streaming è possibile trattare dati real-time ottenuti da fonti come
+Apache Kafka similmente a delle query SQL utilizzando strutture chiamati Dataset. % controllare se dataset o dataframe
+
+\subsection{Analisi}
+
+L'analisi effettuata cerca di valutare la positività dei tweets (il target è quindi binario)
+attraverso modelli allenati a partire dai dati ricevuti utilizzando come target per
+l'apprendimento l'andamento del prezzo di ask di BTCUSDT computato minuto per minuto di modo
+che sia positivo il minuto il cui prezzo di ask medio sia superiore a quello del minuto
+precedente e negativo altrimenti.
+
+\subsection{Preparazione}
+
+La preparazione dei dati è effettuata dalla StreamApp e consiste fondalmente 
 
 % spiego con più precisione cosa fanno le app e come con
 % estratti di codice
+
+% da qualche parte dire che più che le performance predittive dell'analisi (che fanno schifo)
+% mi sono concentrato sulle performance computazionali e.g. scalabilità orizzontale. TODO 

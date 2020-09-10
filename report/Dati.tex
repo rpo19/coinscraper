@@ -29,6 +29,7 @@ quantità; segue un esempio:
 I dati sono forniti in real-time senza nessun parametro temporale; di conseguenza verrà
 aggiunto al momento della ricezione un campo "timestamp" con l'istante corrente come valore.
 Durante l'analisi verrà principalmente utilizzato il valore "askprice".
+Il simbolo scelto è BTCUSDT.
 
 \subsection{Tweets}
 
@@ -87,10 +88,13 @@ L'analisi verrà successivamente effettuata principalmente sul campo "text" cont
 corpo del tweet.
 
 Lo schema di entrambe le categorie di dati è costante per ogni messaggio rendedoli dati
-strutturati o semi-strutturati per quanto riguarda i tweets, che presentano uno schema più complicato contente
-elementi innestati (abbreviati nell'esempio per motivi di spazio) e del testo.
+strutturati o semi-strutturati per quanto riguarda i tweets, che presentano uno schema più complicato
+contente elementi innestati (abbreviati nell'esempio per motivi di spazio) e del testo.
 Nonostante ciò, anche per il fatto che dell'intero tweet i campi analizzati saranno il testo
 e le coordinate temporali, è possibile utilizzare una rappresentazione relazionale.
+
+I tweet sono filtrati "a monte" attraverso le API di Twitter quindi ogni tweet ricevuto risulta già
+pertinente; come filtro è stata utilizzato la parola "bitcoin".
 
 % 2 parole sul fatto che sono strutturati
 
