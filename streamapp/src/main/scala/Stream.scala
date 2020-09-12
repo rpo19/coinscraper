@@ -233,7 +233,7 @@ class Main extends Callable[Int] {
           .option("url", jdbcUrl)
           .option("dbtable", "tweets")
           .option("user", "postgres")
-          .option("password", "password")
+          .option("password", jdbcPassword)
           .mode(SaveMode.Append)
           .save()
       }
@@ -267,7 +267,7 @@ class Main extends Callable[Int] {
           .option("url", jdbcUrl)
           .option("dbtable", "prices")
           .option("user", "postgres")
-          .option("password", "password")
+          .option("password", jdbcPassword)
           .mode(SaveMode.Append)
           .save()
       }
@@ -279,7 +279,7 @@ class Main extends Callable[Int] {
       .option("url", jdbcUrl)
       .option("dbtable", "trendperminute")
       .option("user", "postgres")
-      .option("password", "password")
+      .option("password", jdbcPassword)
       .load()
       .agg(max("timestamp"))
 
@@ -324,7 +324,7 @@ class Main extends Callable[Int] {
           .option("url", jdbcUrl)
           .option("dbtable", "trendperminute")
           .option("user", "postgres")
-          .option("password", "password")
+          .option("password", jdbcPassword)
           .mode(SaveMode.Append)
           .save()
       }
