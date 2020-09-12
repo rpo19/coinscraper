@@ -1,27 +1,177 @@
-\subsection{Applicazione}
+\section{Applicazione}
 
 L'applicazione principale del progetto è la StreamApp composta principalmente da due Streaming
 Query e da un task eseguito periodicamente.
 
-\subsection{Streaming Query}
+Grazie a Spark Structured Streaming è infatti possibile trattare dati strutturati ottenuti in
+real-time da fonti come Apache Kafka similmente a delle query SQL utilizzando strutture chiamate
+Dataframe.
 
-Grazie a Spark Structured Streaming è possibile trattare dati real-time ottenuti da fonti come
-Apache Kafka similmente a delle query SQL utilizzando strutture chiamati Dataset. % controllare se dataset o dataframe
+\begin{figure}
+    \begin{lstlisting}[language=json,firstnumber=1]
+    // Schema del json
+    val binance_schema = new StructType()
+          ...
+          .add("s", "string")
+          .add("a", "string")
+          .add("timestamp", "string")
+    
+    val binance = spark.readStream
+        .format("kafka")
+        .option("kafka.bootstrap.servers", kafkaBootstrapServers)
+        .option("subscribe", pricesTopic)
+        .load.select(
+        from_json($"value".cast("string"), binance_schema).alias("value")
+        )
+        .withColumn("askprice", $"value.a".cast(DoubleType))
+        ...
+        .withColumn("timestamp",
+        ($"value.timestamp".cast(DoubleType)).cast(TimestampType)
+        )
+        .writeStream
+        .foreachBatch {
+            (batchDF: DataFrame, batchId: Long) =>
+        batchDF.withColumn("processedat",
+                current_timestamp())
+            .write
+            .format("jdbc")
+            .option("driver", "org.postgresql.Driver")
+            .option("url", jdbcUrl)
+            ...
+            .save()
+        }
+        .start()
+    \end{lstlisting}
+    \caption{Esempio di Streaming Query}
+    \label{streamingquery}
+    \end{figure}
+
+Nella Figura \ref{streamingquery} è riportata gran parte della Streaming Query che si occupa
+nell'ordine di:
+\begin{enumerate}
+    \item Configurare le opzioni di connessione a Kafka
+    \item Applicare uno schema corretto ai dati (il corpo dei messaggi Kafka è contenuto nel campo
+    value) rinominandoli opportunamente e utilizzando casting al tipo corretto ove necessario
+    \item Aggiungere eventuali informazione ai dati; per esempio viene aggiunto il campo
+    "processed\_at" con il timestamp corrent allo scopo di facilitare a valutazione delle perfornce
+    dell'applicazione
+    \item Scrivere i dati nel database TimescaleDB (attraverso il driver jdbc postgresql). Questa
+    operazione viene svolta attraverso la direttiva foreachBatch in quanto attualmente non è
+    possibile scrivere dati da una Streaming Query direttamente in un database, ma è possibile farlo a
+    partire da normali Dataframe. Perciò avvalendosi di foreachBatch si può ovviare a questo
+    problema aggregando iterativamente i dati ottenuti da una Streaming Query in semplici Dataframe
+    il cui contenuto può essere scritto semplicemente in un database.
+
+\end{enumerate}
 
 \subsection{Analisi}
 
-L'analisi effettuata cerca di valutare la positività dei tweets (il target è quindi binario)
-attraverso modelli allenati a partire dai dati ricevuti utilizzando come target per
-l'apprendimento l'andamento del prezzo di ask di BTCUSDT computato minuto per minuto di modo
+L'analisi effettuata cerca di valutare la positività dei tweets ricevuti (il target è quindi
+binario) attraverso modelli allenati a partire dai dati ricevuti utilizzando come target
+l'andamento del prezzo di ask di BTCUSDT relativo al minuto di pubblicazione del tweet in modo
 che sia positivo il minuto il cui prezzo di ask medio sia superiore a quello del minuto
 precedente e negativo altrimenti.
 
-\subsection{Preparazione}
+In Figura \ref{streamingquery} è illustrato come i dati finanziari contententi i prezzi di ask
+vengono ottenuti e salvati nel database, tuttavia la singola Streaming Query non è sufficiente
+a calcolare il valore medio del prezzo di ask per minuto; sono infatti necessarie due query: una
+per salvare i dati ed una seconda per computare il prezzo medio ogni minuto. Per ovviare a
+quest'ultima esigenza StreamApp istanzia un timer che ogni minuto esegue le operazioni necessarie
+per calcolare il prezzo di ask medio e l'andamento rispetto al minuto precedente a partire dai
+dati salvati nel database per poi scriverne i risultati in una specifica tabella. Il procedimento
+è riassunto in Figura \ref{trendpermin}.
 
-La preparazione dei dati è effettuata dalla StreamApp e consiste fondalmente 
+\begin{figure}
+    \begin{lstlisting}[language=json,firstnumber=1]
+val averagePerMin = priceDB
+    .groupBy(window($"timestamp", "1 minute"))
+    .agg(avg("askprice"))
+    ...
+
+val trendPerMin = averagePerMin
+    .join(
+        averagePerMin
+        //renaming column to old_*
+        ...
+    )
+    .filter(expr("old_timestamp = timestamp - interval '1 minute'"))
+    .withColumn("asktrend", $"avgaskprice" >= $"old_avgaskprice")
+    \end{lstlisting}
+    \caption{Esempio di Streaming Query}
+    \label{trendpermin}
+\end{figure}
+
+Infine l'ultima Streaming Query si occupa dei tweets; effettua fondamentalmente le stesse operazioni
+dell'altra streaming query eccetto che la fase di aggiunta di informazioni è più complicata in quanto
+esegue l'analisi vera e propria per classificare la polarità dei tweets attraverso modelli
+precedentemente allenati tramite la TrainApp.
+
+La classificazione risulta essenzialmente una "Sentiment Analysis" supervisionata e sfrutta alcune
+funzionalità della libreria MLlib di Spark; implica nell'ordine di:
+
+\begin{enumerate}
+    \item Separare l'input in token
+    \item Rimuovere le cosiddette "stop-words"
+    \item Eseguire lo "stemming" su ogni token
+    \item Trasformare l'input tramite word embedding in modo da ottenere una rapprentazione
+    utilizzabile come input per allenare un modello di machine learning; è stato utilizzato
+    Word2Vec.
+    \item Infine dare la rapprentazione ottenuta tramite Word2Vec come input ad una Regressione
+    Logistica, modello in grado di classificare target binari.
+\end{enumerate}
+
+Ognuno di questi step, eccetto lo stemming, utilizza funzioni fornite dalla MLlib di Apache Spark
+e per questo motivo si tratta di operazioni scalabili orizzontalmente sui vari nodi del cluster.
+Per quanto riguarda lo stemming invece non è stato possibile utilizzare librerie sviluppate
+appositamente per l'ultima versione di Spark ma è stato utilizzato Apache OpenNLP.
+
+In Figura \ref{streamapp} è illustrato uno schema del funzionamento di StreamApp.
+
+\subsection{Training}
+
+Per quanto riguarda il training dei modelli svolto per conto della TrainApp a partire dai tweets
+salvati nel database sono stati eseguiti alcuni degli stessi passaggi necessari anche per
+l'analisi di nuovi tweets quali:
+
+\begin{enumerate}
+    \item Tokenizzazione
+    \item Rimozione delle stop-words
+    \item Stemming
+\end{enumerate}
+
+Per poi utilizzare i token rimasti per il training del modello Word2Vec ed in seguito la
+rappresentazione Word2Vec insieme all'andamento del prezzo di ask calcolato al minuto
+per l'allenamento del modello di Regressione logistica rispettivamente come input e come target.
+
+\subsection{Performance del modello}
+
+La TrainApp stessa prima della creazione del modello finale utilizzando la totalità dei dati
+ne esegue una validazione dividendo il dataset in trainset e testset e computando il valore AUC
+(Area Under ROC).
+Purtroppo i risultati ottenuti non sono dei migliori: i valori di AUC sono intorno a 0.5, cioè
+le performance sono paragonabili a una scelta random.
+La polarità dei tweets calcolata dal modello non corrisponde quindi all'effettivo andamento del
+prezzo di ask di quel minuto.
+In più molti tweets sono probabilmente irrilevanti con il momento in considerazione, perciò potrebbe essere utile un
+filtraggio manuale di un insieme ristretto di tweets in modo da selezionare solo quelli rilevanti
+e un'ulteriore operazione manuale di etichettatura per sopperire al fatto che utilizzare l'andamento
+del minuto di pubblicazine del tweet non è stato sufficiente.
+
+% dire che non mi aspettavo di poter prevedere il mercato con i tweets?
+
 
 % spiego con più precisione cosa fanno le app e come con
 % estratti di codice
 
 % da qualche parte dire che più che le performance predittive dell'analisi (che fanno schifo)
 % mi sono concentrato sulle performance computazionali e.g. scalabilità orizzontale. TODO 
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[
+		height=10cm,
+		keepaspectratio,
+    ]{streamapp.png}
+    \caption{Schema del funzionamento di StreamApp}
+    \label{streamapp}
+\end{figure}
