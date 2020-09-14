@@ -312,12 +312,13 @@ class Main extends Callable[Int] {
         val trendPerMin = step2
           .join(
             step2
-              .withColumnRenamed("timestamp", "old_timestamp")
-              .withColumnRenamed("avgaskprice", "old_avgaskprice")
+              .withColumnRenamed("timestamp", "new_timestamp")
+              .withColumnRenamed("avgaskprice", "new_avgaskprice")
           )
-          .filter(expr("old_timestamp = timestamp - interval '1 minute'"))
-          .withColumn("asktrend", $"avgaskprice" >= $"old_avgaskprice")
-          .select("timestamp", "asktrend")
+          // minuto positivo se il prossimo minuto ha un valore maggiore
+          .filter(expr("timestamp + interval '1 minute' = new_timestamp"))
+          .withColumn("asktrend", $"new_avgaskprice" >= $"avgaskprice")
+          .select("timestamp", "asktrend", "avgaskprice")
           .write
           .format("jdbc")
           .option("driver", "org.postgresql.Driver")

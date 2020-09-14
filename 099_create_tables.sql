@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS trendperminute (
  id             BIGSERIAL           NOT NULL,
  timestamp      TIMESTAMPTZ         UNIQUE NOT NULL,
  asktrend       BOOLEAN             NOT NULL,
+ avgaskprice    DOUBLE PRECISION    NOT NULL,
  PRIMARY KEY(timestamp, id)
 );
 

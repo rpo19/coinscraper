@@ -119,6 +119,7 @@ class Main extends Callable[Int] {
         .withColumnRenamed("id", "trend_id")
         .withColumnRenamed("asktrend", "nextminasktrend"))
       // .filter(expr("timestamp < trend_timestamp and timestamp >= trend_timestamp - interval '1 minute'"))
+      // prendo tweets per ogni minuto
       .filter(expr("timestamp >= trend_timestamp and timestamp < trend_timestamp + interval '1 minute'"))
       .select("id", "timestamp", "text", "nextminasktrend")
       .withColumn("label", $"nextminasktrend".cast(IntegerType))
