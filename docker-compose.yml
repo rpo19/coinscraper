@@ -103,6 +103,16 @@ services:
       - grafana_data:/var/lib/grafana
     ports:
       - 3000:3000
+  pgadmin:
+    image: dpage/pgadmin4
+    restart: "no"
+    volumes:
+      - pgadmin:/var/lib/pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: postgres@localhost
+      PGADMIN_DEFAULT_PASSWORD: password
+    ports:
+      - 9080:80
 
 
 volumes:
@@ -113,3 +123,4 @@ volumes:
   hadoop_datanode:
   grafana_data:
   spark_models:
+  pgadmin:
