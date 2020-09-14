@@ -69,15 +69,15 @@ nell'ordine di:
 L'analisi effettuata cerca di valutare la positività dei tweets ricevuti (il target è quindi
 binario) attraverso modelli allenati a partire dai dati ricevuti utilizzando come target
 l'andamento del prezzo di ask di BTCUSDT relativo al minuto di pubblicazione del tweet in modo
-che sia positivo il minuto il cui prezzo di ask medio sia superiore a quello del minuto
-precedente e negativo altrimenti.
+che sia positivo ogni minuto il cui successivo abbia un prezzo di ask medio superiore e
+negativo altrimenti.
 
 In Figura \ref{streamingquery} è illustrato come i dati finanziari contententi i prezzi di ask
 vengono ottenuti e salvati nel database, tuttavia la singola Streaming Query non è sufficiente
 a calcolare il valore medio del prezzo di ask per minuto; sono infatti necessarie due query: una
 per salvare i dati ed una seconda per computare il prezzo medio ogni minuto. Per ovviare a
-quest'ultima esigenza StreamApp istanzia un timer che ogni minuto esegue le operazioni necessarie
-per calcolare il prezzo di ask medio e l'andamento rispetto al minuto precedente a partire dai
+quest'ultima esigenza StreamApp istanzia un timer periodicamente esegue le operazioni necessarie
+per calcolare il prezzo di ask medio e la polarità di ogni minuto a partire dai
 dati salvati nel database per poi scriverne i risultati in una specifica tabella. Il procedimento
 è riassunto in Figura \ref{trendpermin}.
 
@@ -91,11 +91,11 @@ val averagePerMin = priceDB
 val trendPerMin = averagePerMin
     .join(
         averagePerMin
-        //renaming column to old_*
+        //renaming column to new_*
         ...
     )
-    .filter(expr("old_timestamp = timestamp - interval '1 minute'"))
-    .withColumn("asktrend", $"avgaskprice" >= $"old_avgaskprice")
+    .filter(expr("timestamp + interval '1 minute' = new_timestamp"))
+    .withColumn("asktrend", $"new_avgaskprice" >= $"avgaskprice")
     \end{lstlisting}
     \caption{Esempio di Streaming Query}
     \label{trendpermin}
