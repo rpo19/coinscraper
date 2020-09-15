@@ -98,11 +98,20 @@ services:
       - spark_models:/models
   grafana:
     image: grafana/grafana:7.1.5-ubuntu
-    restart: on-failure
+    restart: "no"
     volumes:
       - grafana_data:/var/lib/grafana
     ports:
       - 3000:3000
+    environment:
+      GF_RENDERING_SERVER_URL: http://grafana-renderer:8081/render
+      GF_RENDERING_CALLBACK_URL: http://grafana:3000/
+      GF_LOG_FILTERS: rendering:debug
+  grafana-renderer:
+    image: grafana/grafana-image-renderer
+    restart: "no"
+    environment:
+      BROWSER_TZ: Europe/Stockholm
   pgadmin:
     image: dpage/pgadmin4
     restart: "no"
