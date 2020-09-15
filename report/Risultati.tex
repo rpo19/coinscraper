@@ -1,2 +1,45 @@
 \section{Risultati}
 
+Per dimostrare la scalabilità orizzantale dell'applicazione sono state utilizzate le seguenti
+macchine:
+
+\begin{enumerate}
+    \item un laptop con Intel core i5 e 8gb ram,
+    \item un laptop con Intel core i7 e 16gb ram
+\end{enumerate}
+
+La maggior parte dei servizi necessari all'applicazione sono stati eseguiti sulla prima macchina:
+TimescaleDB, Kafka e Zookeeper, i producer, l'istanza master di Spark, alcune istanze worker ed
+infine il processo submit di Spark che "invia" la StreamApp al cluster attraverso il master.
+
+Nella seconda macchina sono stati eseguiti soltanto Spark workers appartenenti allo stesso cluster.
+
+Ogni worker dispone di 1 cpu e 1gb di ram ed il loro numero è stato incrementato gradualmente
+allo scopo di testare la scalabilità dell'applicazione in questo modo:
+
+\begin{itemize}
+    \item inizialmente (alle 20:50 circa) è stato eseguito un solo worker nella prima macchina
+    \item tre minuti dopo ne è stata eseguita un'atra istanza sulla prima macchina
+    \item d'ora in poi ogni 3 minuti è stato aggiunto un worker sulla seconda macchina fino a
+          a raggiungere un totale di 10 worker sulla seconda macchina più 2 sulla prima
+    \item infine sono stati aggiunti altri 4 worker sulla seconda macchina sempre ad intervalli di
+          tre minuti.
+\end{itemize}
+
+\begin{figure}
+    \centering
+    \includegraphics[
+		height=5cm,
+		keepaspectratio,
+    ]{process_delay.png}
+    \caption{Process delay}
+    \label{processdelay}
+\end{figure}
+
+Nella Figura \ref{processdelay} è riportato il grafico che mostra il ritardo nell'analisi dei tweets
+e dei prezzi ricevuti calcolato come differenza tra il momento di ricezione (aggiunto dai producer)
+ed il momento subito precedente all'inserimento nel database (il ritardo è una media sulle 90 righe
+precedente in modo da semplificarne la comprensione).
+
+Si può notare come all'aumentare del numero dei worker il ritardo diminuisce leggermente e
+soprattutto come diminuisce il numero e la frequenza dei "picchi".
