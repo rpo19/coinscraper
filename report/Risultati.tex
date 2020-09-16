@@ -28,7 +28,7 @@ allo scopo di testare la scalabilità dell'applicazione in questo modo:
 
 \begin{center}
     \includegraphics[max width=\linewidth]{process_delay.png}
-    \captionof{figure}{Process delay}
+    \captionof{figure}{Ritardo tra ricezione ed elaborazione dei dati ricevuti}
     \label{processdelay}
 \end{center}
 
@@ -38,19 +38,22 @@ Nella Figura \ref{processdelay} è riportato il grafico che mostra il ritardo ne
 (aggiunto dai producer) ed il momento subito precedente all'inserimento nel database (il ritardo è
 una media sulle righe precedenti in modo da semplificarne la comprensione).
 
-Si può notare che generalemente i tempi richiesti (mediamente circa 300ms per i prezzi e 750ms per
+Si può notare che generalemente i tempi richiesti (mediamente 300ms per i prezzi e 750ms per
 i tweets) siano pressochè indipendenti dal numero di worker,
 probabilmente significando che uno o due worker sono in grado di gestire il flusso medio di dati
-ricevuto.
+ricevuto (mostrato in Figura \ref{rate}).
 come all'aumentare del numero dei worker il ritardo diminuisca e soprattutto la
 riduzione del numero e della frequenza dei "picchi".
 
 \begin{center}
     \includegraphics[max width=\linewidth]{rate.png}
-    \captionof{figure}{Rate per minute}
+    \captionof{figure}{Numero di messaggi ricevuti al minuto}
     \label{rate}
 \end{center}
 
-In Figura \ref{rate} è riportato il numero di messaggi ricevuti in al minuto da Twitter (in giallo
-sull'asse delle ordinate destro) e da Binance (in verde sulle ordinate a sinistra).
+In Figura \ref{rate} è riportato il numero di messaggi ricevuti al minuto da Twitter, in giallo
+sull'asse delle ordinate destro, e da Binance, in verde sulle ordinate a sinistra, nell'intervallo
+di tempo preso in analisi.
+Riassumento sono stati ricevuti ogni minuto in media 895 messaggi relativi ai prezzi con un
+massimo di 1737, mentre per quanto riguarda i tweets mediamente 64 con un massimo di 154. 
 
