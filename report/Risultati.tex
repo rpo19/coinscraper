@@ -36,9 +36,13 @@ allo scopo di testare la scalabilità dell'applicazione in questo modo:
 Nella Figura \ref{processdelay} è riportato il grafico che mostra il ritardo nell'analisi dei tweets
 (in giallo) e dei prezzi (in verde) ricevuti calcolato come differenza tra il momento di ricezione
 (aggiunto dai producer) ed il momento subito precedente all'inserimento nel database (il ritardo è
-una media sulle 90 righe precedente in modo da semplificarne la comprensione).
+una media sulle righe precedenti in modo da semplificarne la comprensione).
 
-Si può notare come all'aumentare del numero dei worker il ritardo diminuisca e soprattutto la
+Si può notare che generalemente i tempi richiesti (mediamente circa 300ms per i prezzi e 750ms per
+i tweets) siano pressochè indipendenti dal numero di worker,
+probabilmente significando che uno o due worker sono in grado di gestire il flusso medio di dati
+ricevuto.
+come all'aumentare del numero dei worker il ritardo diminuisca e soprattutto la
 riduzione del numero e della frequenza dei "picchi".
 
 \begin{center}
