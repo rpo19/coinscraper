@@ -8,3 +8,4 @@
 .metals
 **/.scalafmt.conf
 **/.vscode
+.env
