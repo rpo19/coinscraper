@@ -26,20 +26,27 @@ allo scopo di testare la scalabilità dell'applicazione in questo modo:
           tre minuti.
 \end{itemize}
 
-\begin{figure}
-    \centering
-    \includegraphics[
-		height=5cm,
-		keepaspectratio,
-    ]{process_delay.png}
-    \caption{Process delay}
+\begin{center}
+    \includegraphics[max width=\linewidth]{process_delay.png}
+    \captionof{figure}{Process delay}
     \label{processdelay}
-\end{figure}
+\end{center}
+
 
 Nella Figura \ref{processdelay} è riportato il grafico che mostra il ritardo nell'analisi dei tweets
-e dei prezzi ricevuti calcolato come differenza tra il momento di ricezione (aggiunto dai producer)
-ed il momento subito precedente all'inserimento nel database (il ritardo è una media sulle 90 righe
-precedente in modo da semplificarne la comprensione).
+(in giallo) e dei prezzi (in verde) ricevuti calcolato come differenza tra il momento di ricezione
+(aggiunto dai producer) ed il momento subito precedente all'inserimento nel database (il ritardo è
+una media sulle 90 righe precedente in modo da semplificarne la comprensione).
 
-Si può notare come all'aumentare del numero dei worker il ritardo diminuisce leggermente e
-soprattutto come diminuisce il numero e la frequenza dei "picchi".
+Si può notare come all'aumentare del numero dei worker il ritardo diminuisca e soprattutto la
+riduzione del numero e della frequenza dei "picchi".
+
+\begin{center}
+    \includegraphics[max width=\linewidth]{rate.png}
+    \captionof{figure}{Rate per minute}
+    \label{rate}
+\end{center}
+
+In Figura \ref{rate} è riportato il numero di messaggi ricevuti in al minuto da Twitter (in giallo
+sull'asse delle ordinate destro) e da Binance (in verde sulle ordinate a sinistra).
+
