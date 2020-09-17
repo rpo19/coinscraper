@@ -1,6 +1,6 @@
 \section{Risultati}
 
-Per dimostrare la scalabilità orizzantale dell'applicazione sono state utilizzate le seguenti
+Per dimostrare la scalabilità orizzontale dell'applicazione sono state utilizzate le seguenti
 macchine:
 
 \begin{enumerate}
@@ -19,7 +19,7 @@ allo scopo di testare la scalabilità dell'applicazione in questo modo:
 
 \begin{itemize}
     \item inizialmente (alle 20:50 circa) è stato eseguito un solo worker nella prima macchina
-    \item tre minuti dopo ne è stata eseguita un'atra istanza sulla prima macchina
+    \item tre minuti dopo ne è stata eseguita un'altra istanza sulla prima macchina
     \item d'ora in poi ogni 3 minuti è stato aggiunto un worker sulla seconda macchina fino a
           a raggiungere un totale di 10 worker sulla seconda macchina più 2 sulla prima
     \item infine sono stati aggiunti altri 4 worker sulla seconda macchina sempre ad intervalli di
@@ -38,8 +38,8 @@ Nella Figura \ref{processdelay} è riportato il grafico che mostra il ritardo ne
 (aggiunto dai producer) ed il momento subito precedente all'inserimento nel database (il ritardo è
 una media sulle righe precedenti in modo da semplificarne la comprensione).
 
-Si può notare che generalemente i tempi richiesti (mediamente 300ms per i prezzi e 750ms per
-i tweets) siano pressochè indipendenti dal numero di worker,
+Si può notare che generalmente i tempi richiesti (mediamente 300ms per i prezzi e 750ms per
+i tweets) siano pressoché indipendenti dal numero di worker,
 probabilmente significando che uno o due worker sono in grado di gestire il flusso medio di dati
 ricevuto (mostrato in Figura \ref{rate}).
 come all'aumentare del numero dei worker il ritardo diminuisca e soprattutto la
@@ -54,6 +54,6 @@ riduzione del numero e della frequenza dei "picchi".
 In Figura \ref{rate} è riportato il numero di messaggi ricevuti al minuto da Twitter, in giallo
 sull'asse delle ordinate destro, e da Binance, in verde sulle ordinate a sinistra, nell'intervallo
 di tempo preso in analisi.
-Riassumento sono stati ricevuti ogni minuto in media 895 messaggi relativi ai prezzi con un
+Riassumendo sono stati ricevuti ogni minuto in media 895 messaggi relativi ai prezzi con un
 massimo di 1737, mentre per quanto riguarda i tweets mediamente 64 con un massimo di 154. 
 

@@ -12,7 +12,7 @@ utile per esempio nel caso si desideri collezionare gli stessi dati da più font
 (in questo contesto aggiungere fonti secondarie potrebbe frazionare il rischio relativo
 all'interruzione dei dati riguardanti l'andamento della criptovaluta sul mercato).
 \\
-La scelta è ricaduta sul suddetto software perchè in grado di garantire
+La scelta è ricaduta sul suddetto software perché in grado di garantire
 high-availability, fault-tolerancy, ottime performance e la possibilità di configurare un cluster
 di più nodi scalabile quindi orizzontalmente. \cite{kafka_doc}
 \\
@@ -95,14 +95,14 @@ ne è un estensione. Per questo motivo TimescaleDB risulta relativamente semplic
 per coloro che hanno già avuto esperienza con PostgreSQL ed è inoltre compatibile con i client
 supportati da PostgreSQL.
 \\
-Ciò semplifica la connessione con l'applicazione Spark che grazie al module Spark SQL è in grado
-di utilizzare driver JDBC per intergire con database relazionali tra cui PostgreSQL
+Ciò semplifica la connessione con l'applicazione Spark che grazie al modulo Spark SQL è in grado
+di utilizzare driver JDBC per interagire con database relazionali tra cui PostgreSQL
 \cite{spark_sql}.
 
 \subsection{Spark}
 
 Apache Spark è un framework open-source per l'analisi di dati su larga scala che offre ottime
-performance sia per elaborazioni batch che in streaming. Offre API di alto livello nei lingiaggi
+performance sia per elaborazioni batch che in streaming. Offre API di alto livello nei linguaggi
 Scala, Java, Python e R, e librerie aggiuntive come MLlib, che fornisce strumenti utili per il
 machine learning, Spark SQL, modulo per l'elaborazione di dati strutturati,
 e Structured Streaming basato su Spark SQL ma rivolto ai dati strutturati in streaming \cite{spark}.
@@ -126,7 +126,7 @@ si occupa di ricevere, elaborare e analizzare sia i dati finanziari che i tweets
 Applicazione aggiuntiva anch'essa sviluppata utilizzando le API Scala di Apache Spark che si occupa
 del training di alcuni modelli utilizzati da StreamApp a partire dai dati ricevuti da essa.
 Per questo motivo StreamApp è necessariamente in grado di funzionare (parzialmente) anche in assenza
-di questi modelli cossicchè sia possibile ottenere una quantità di dati iniziale con cui allenare i
+di questi modelli cosicché sia possibile ottenere una quantità di dati iniziale con cui allenare i
 modelli.
 
 \subsection{Grafana}

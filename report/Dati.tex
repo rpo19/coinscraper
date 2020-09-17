@@ -6,7 +6,7 @@ il momento di acquisizione) e che presentano come conseguenza alcune peculiarit�
 che spesso sono i dati recenti ad essere più "interessanti" e di conseguenza raramente si ha
 la necessità di aggiornare dati passati.
 \\
-Ne sono alcuni esempio i dati acquisiti da sensori ad esempio metereologici, quelli relativi
+Ne sono alcuni esempio i dati acquisiti da sensori ad esempio meteorologici, quelli relativi
 all'utilizza delle risorse hardware di un personal computer o quotazioni di titoli finanziari.
 
 \subsection{Dati finanziari}
@@ -34,7 +34,7 @@ Il simbolo scelto è BTCUSDT.
 \subsection{Tweets}
 
 Anche i tweets possono essere considerati serie temporali data la notevole importanza
-dell'istante di pubblicazione, soprattuto se analizzati per legati alla finanza.
+dell'istante di pubblicazione, sopratutto se analizzati per legati alla finanza.
 \\
 Sono ricevuti attraverso le API per sviluppatori fornite da Twitter \cite{twitter} e si
 presentano come segue:
@@ -82,12 +82,12 @@ presentano come segue:
 Si nota la presenza di ben 2 campi temporali ("created\_at" e "timestamp\_ms") che
 rappresentano in realtà il medesimo istante temporale ma con precisione differente.
 Tuttavia è possibile notare un certo ritardo nella ricezione dei tweets di circa 5-10
-secondi, perciò è risultato necessario un campo aggiuntivo chiamato "received\_at" così
+secondi, perciò è risultato necessario un campo aggiuntivo chiamato "receivedat" così
 da tenere traccia del momento di ricezione.
 L'analisi verrà successivamente effettuata principalmente sul campo "text" contente il
 corpo del tweet.
 
-Lo schema di entrambe le categorie di dati è costante per ogni messaggio rendedoli dati
+Lo schema di entrambe le categorie di dati è costante per ogni messaggio rendendoli dati
 strutturati o semi-strutturati per quanto riguarda i tweets, che presentano uno schema più complicato
 contente elementi innestati (abbreviati nell'esempio per motivi di spazio) e del testo.
 Nonostante ciò, anche per il fatto che dell'intero tweet i campi analizzati saranno il testo

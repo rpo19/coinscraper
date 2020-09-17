@@ -53,7 +53,7 @@ nell'ordine di:
     \item Applicare uno schema corretto ai dati (il corpo dei messaggi Kafka è contenuto nel campo
     value) rinominandoli opportunamente e utilizzando casting al tipo corretto ove necessario
     \item Aggiungere eventuali informazione ai dati; per esempio viene aggiunto il campo
-    "processed\_at" con il timestamp corrent allo scopo di facilitare a valutazione delle perfornce
+    "processedat" con il timestamp corrente allo scopo di facilitare a valutazione delle performance
     dell'applicazione
     \item Scrivere i dati nel database TimescaleDB (attraverso il driver jdbc postgresql). Questa
     operazione viene svolta attraverso la direttiva foreachBatch in quanto attualmente non è
@@ -72,7 +72,7 @@ l'andamento del prezzo di ask di BTCUSDT relativo al minuto di pubblicazione del
 che sia positivo ogni minuto il cui successivo abbia un prezzo di ask medio superiore e
 negativo altrimenti.
 
-In Figura \ref{streamingquery} è illustrato come i dati finanziari contententi i prezzi di ask
+In Figura \ref{streamingquery} è illustrato come i dati finanziari contenenti i prezzi di ask
 vengono ottenuti e salvati nel database, tuttavia la singola Streaming Query non è sufficiente
 a calcolare il valore medio del prezzo di ask per minuto; sono infatti necessarie due query: una
 per salvare i dati ed una seconda per computare il prezzo medio ogni minuto. Per ovviare a
@@ -113,10 +113,10 @@ funzionalità della libreria MLlib di Spark; implica nell'ordine di:
     \item Separare l'input in token
     \item Rimuovere le cosiddette "stop-words"
     \item Eseguire lo "stemming" su ogni token
-    \item Trasformare l'input tramite word embedding in modo da ottenere una rapprentazione
+    \item Trasformare l'input tramite word embedding in modo da ottenere una rappresentazione
     utilizzabile come input per allenare un modello di machine learning; è stato utilizzato
     Word2Vec.
-    \item Infine dare la rapprentazione ottenuta tramite Word2Vec come input ad una Regressione
+    \item Infine dare la rappresentazione ottenuta tramite Word2Vec come input ad una Regressione
     Logistica, modello in grado di classificare target binari.
 \end{enumerate}
 
@@ -155,7 +155,7 @@ prezzo di ask di quel minuto.
 In più molti tweets sono probabilmente irrilevanti con il momento in considerazione, perciò potrebbe essere utile un
 filtraggio manuale di un insieme ristretto di tweets in modo da selezionare solo quelli rilevanti
 e un'ulteriore operazione manuale di etichettatura per sopperire al fatto che utilizzare l'andamento
-del minuto di pubblicazine del tweet non è stato sufficiente.
+del minuto di pubblicazione del tweet non è stato sufficiente.
 
 % dire che non mi aspettavo di poter prevedere il mercato con i tweets?
 
