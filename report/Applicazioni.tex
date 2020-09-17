@@ -49,13 +49,13 @@ Dataframe.
 Nella Figura \ref{streamingquery} è riportata gran parte della Streaming Query che si occupa
 nell'ordine di:
 \begin{enumerate}
-    \item Configurare le opzioni di connessione a Kafka
+    \item Configurare le opzioni di connessione a Kafka.
     \item Applicare uno schema corretto ai dati (il corpo dei messaggi Kafka è contenuto nel campo
-    value) rinominandoli opportunamente e utilizzando casting al tipo corretto ove necessario
+    value) rinominandoli opportunamente e utilizzando casting al tipo corretto ove necessario.
     \item Aggiungere eventuali informazione ai dati; per esempio viene aggiunto il campo
     "processedat" con il timestamp corrente allo scopo di facilitare a valutazione delle performance
-    dell'applicazione
-    \item Scrivere i dati nel database TimescaleDB (attraverso il driver jdbc postgresql). Questa
+    dell'applicazione.
+    \item Scrivere i dati nel database TimescaleDB (attraverso il driver jdbc di postgresql). Questa
     operazione viene svolta attraverso la direttiva foreachBatch in quanto attualmente non è
     possibile scrivere dati da una Streaming Query direttamente in un database, ma è possibile farlo a
     partire da normali Dataframe. Perciò avvalendosi di foreachBatch si può ovviare a questo
@@ -76,7 +76,7 @@ In Figura \ref{streamingquery} è illustrato come i dati finanziari contenenti i
 vengono ottenuti e salvati nel database, tuttavia la singola Streaming Query non è sufficiente
 a calcolare il valore medio del prezzo di ask per minuto; sono infatti necessarie due query: una
 per salvare i dati ed una seconda per computare il prezzo medio ogni minuto. Per ovviare a
-quest'ultima esigenza StreamApp istanzia un timer periodicamente esegue le operazioni necessarie
+quest'ultima esigenza StreamApp istanzia un timer che periodicamente esegue le operazioni necessarie
 per calcolare il prezzo di ask medio e la polarità di ogni minuto a partire dai
 dati salvati nel database per poi scriverne i risultati in una specifica tabella. Il procedimento
 è riassunto in Figura \ref{trendpermin}.
@@ -97,7 +97,7 @@ val trendPerMin = averagePerMin
     .filter(expr("timestamp + interval '1 minute' = new_timestamp"))
     .withColumn("asktrend", $"new_avgaskprice" >= $"avgaskprice")
     \end{lstlisting}
-    \caption{Esempio di Streaming Query}
+    \caption{Calcolo del prezzo di ask medio al minuto}
     \label{trendpermin}
 \end{figure}
 
@@ -110,38 +110,41 @@ La classificazione risulta essenzialmente una "Sentiment Analysis" supervisionat
 funzionalità della libreria MLlib di Spark; implica nell'ordine di:
 
 \begin{enumerate}
-    \item Separare l'input in token
-    \item Rimuovere le cosiddette "stop-words"
-    \item Eseguire lo "stemming" su ogni token
+    \item Separare l'input in token.
+    \item Rimuovere le cosiddette "stop-words".
+    \item Eseguire lo "stemming" su ogni token.
     \item Trasformare l'input tramite word embedding in modo da ottenere una rappresentazione
     utilizzabile come input per allenare un modello di machine learning; è stato utilizzato
     Word2Vec.
-    \item Infine dare la rappresentazione ottenuta tramite Word2Vec come input ad una Regressione
+    \item Infine fornire la rappresentazione ottenuta tramite Word2Vec come input ad una Regressione
     Logistica, modello in grado di classificare target binari.
 \end{enumerate}
 
 Ognuno di questi step, eccetto lo stemming, utilizza funzioni fornite dalla MLlib di Apache Spark
 e per questo motivo si tratta di operazioni scalabili orizzontalmente sui vari nodi del cluster.
 Per quanto riguarda lo stemming invece non è stato possibile utilizzare librerie sviluppate
-appositamente per l'ultima versione di Spark ma è stato utilizzato Apache OpenNLP.
+appositamente per l'ultima versione di Spark ma è stato utilizzato Apache OpenNLP, tuttavia
+riuscendo ugualemente a rendere l'esecuzione di questo step distribuibile su più nodi.
 
 In Figura \ref{streamapp} è illustrato uno schema del funzionamento di StreamApp.
 
 \subsection{Training}
 
-Per quanto riguarda il training dei modelli svolto per conto della TrainApp a partire dai tweets
+Il training dei modelli è svolto per conto della TrainApp: a partire dai tweets
 salvati nel database sono stati eseguiti alcuni degli stessi passaggi necessari anche per
-l'analisi di nuovi tweets quali:
+l'analisi in streaming, quali:
 
 \begin{enumerate}
-    \item Tokenizzazione
-    \item Rimozione delle stop-words
-    \item Stemming
+    \item Tokenizzazione.
+    \item Rimozione delle stop-words.
+    \item Stemming.
 \end{enumerate}
 
-Per poi utilizzare i token rimasti per il training del modello Word2Vec ed in seguito la
-rappresentazione Word2Vec insieme all'andamento del prezzo di ask calcolato al minuto
-per l'allenamento del modello di Regressione logistica rispettivamente come input e come target.
+Per poi utilizzare i token rimasti per il training del modello Word2Vec, ed in seguito
+impiegare la
+rappresentazione Word2Vec, come input, insieme all'andamento del prezzo di ask al minuto,
+come target,
+per allenare il modello di Regressione logistica.
 
 \subsection{Performance del modello}
 
@@ -151,20 +154,12 @@ ne esegue una validazione dividendo il dataset in trainset e testset e computand
 Purtroppo i risultati ottenuti non sono dei migliori: i valori di AUC sono intorno a 0.5, cioè
 le performance sono paragonabili a una scelta random.
 La polarità dei tweets calcolata dal modello non corrisponde quindi all'effettivo andamento del
-prezzo di ask di quel minuto.
-In più molti tweets sono probabilmente irrilevanti con il momento in considerazione, perciò potrebbe essere utile un
+prezzo di ask.
+In più molti tweets sono probabilmente irrilevanti con il momento in considerazione,
+perciò potrebbe essere utile un
 filtraggio manuale di un insieme ristretto di tweets in modo da selezionare solo quelli rilevanti
-e un'ulteriore operazione manuale di etichettatura per sopperire al fatto che utilizzare l'andamento
-del minuto di pubblicazione del tweet non è stato sufficiente.
-
-% dire che non mi aspettavo di poter prevedere il mercato con i tweets?
-
-
-% spiego con più precisione cosa fanno le app e come con
-% estratti di codice
-
-% da qualche parte dire che più che le performance predittive dell'analisi (che fanno schifo)
-% mi sono concentrato sulle performance computazionali e.g. scalabilità orizzontale. TODO 
+e un'ulteriore operazione manuale di etichettatura per sopperire al fatto che non è stato sufficiente
+utilizzare l'andamento del prezzo di ask come target.
 
 \begin{figure}[h!]
     \centering

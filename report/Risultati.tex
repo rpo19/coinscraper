@@ -9,8 +9,8 @@ macchine:
 \end{enumerate}
 
 La maggior parte dei servizi necessari all'applicazione sono stati eseguiti sulla prima macchina:
-TimescaleDB, Kafka e Zookeeper, i producer, l'istanza master di Spark, alcune istanze worker ed
-infine il processo submit di Spark che "invia" la StreamApp al cluster attraverso il master.
+TimescaleDB, Kafka, i producer, l'istanza master di Spark, alcune istanze worker ed
+infine il processo submit di Spark che avvia l'esecuzione della StreamApp all'interno del cluster.
 
 Nella seconda macchina sono stati eseguiti soltanto Spark workers appartenenti allo stesso cluster.
 
@@ -35,15 +35,14 @@ allo scopo di testare la scalabilità dell'applicazione in questo modo:
 
 Nella Figura \ref{processdelay} è riportato il grafico che mostra il ritardo nell'analisi dei tweets
 (in giallo) e dei prezzi (in verde) ricevuti calcolato come differenza tra il momento di ricezione
-(aggiunto dai producer) ed il momento subito precedente all'inserimento nel database (il ritardo è
-una media sulle righe precedenti in modo da semplificarne la comprensione).
+(aggiunto dai producer) ed il momento subito precedente all'inserimento nel database.
 
 Si può notare che generalmente i tempi richiesti (mediamente 300ms per i prezzi e 750ms per
 i tweets) siano pressoché indipendenti dal numero di worker,
 probabilmente significando che uno o due worker sono in grado di gestire il flusso medio di dati
 ricevuto (mostrato in Figura \ref{rate}).
-come all'aumentare del numero dei worker il ritardo diminuisca e soprattutto la
-riduzione del numero e della frequenza dei "picchi".
+Ed è altrattando evidente come all'aumentare del numero dei worker diminuiscano numero e 
+frequenza dei "picchi" probabilmente dovuti alle oscillazioni nella frequenza dei messaggi ricevuti.
 
 \begin{center}
     \includegraphics[max width=\linewidth]{rate.png}

@@ -1,13 +1,15 @@
 \section{Dati}
 
-I dati acquisiti dall'applicazione in tempo reale sono di tipo \textbf{time-series} o serie
+\subsection{Time-series}
+
+I dati acquisiti dall'applicazione sono di tipo \textbf{time-series} o serie
 temporali; si tratta di dati strettamente dipendenti da una coordinata temporale (ad esempio
-il momento di acquisizione) e che presentano come conseguenza alcune peculiarità come il fatto
-che spesso sono i dati recenti ad essere più "interessanti" e di conseguenza raramente si ha
-la necessità di aggiornare dati passati.
+il momento di acquisizione) e che pertanto presentano alcune peculiarità come il fatto
+che spesso sono i record recenti ad essere più "interessanti" e di conseguenza raramente si ha
+la necessità di aggiornare quelli più datati.
 \\
-Ne sono alcuni esempio i dati acquisiti da sensori ad esempio meteorologici, quelli relativi
-all'utilizza delle risorse hardware di un personal computer o quotazioni di titoli finanziari.
+Ne sono alcuni esempi i dati acquisiti da sensori ad esempio meteorologici, quelli relativi
+all'utilizzo delle risorse hardware di un personal computer o le quotazioni di titoli finanziari.
 
 \subsection{Dati finanziari}
 
@@ -26,15 +28,15 @@ quantità; segue un esempio:
 }
 \end{lstlisting}
 %
-I dati sono forniti in real-time senza nessun parametro temporale; di conseguenza verrà
+I dati sono forniti in real-time senza nessun parametro temporale; di conseguenza viene
 aggiunto al momento della ricezione un campo "timestamp" con l'istante corrente come valore.
 Durante l'analisi verrà principalmente utilizzato il valore "askprice".
-Il simbolo scelto è BTCUSDT.
+Il simbolo scelto al quale i prezzi ricevuti si riferiscomo è BTCUSDT.
 
 \subsection{Tweets}
 
 Anche i tweets possono essere considerati serie temporali data la notevole importanza
-dell'istante di pubblicazione, sopratutto se analizzati per legati alla finanza.
+dell'istante di pubblicazione, sopratutto se analizzati per scopi legati alla finanza.
 \\
 Sono ricevuti attraverso le API per sviluppatori fornite da Twitter \cite{twitter} e si
 presentano come segue:
@@ -82,20 +84,19 @@ presentano come segue:
 Si nota la presenza di ben 2 campi temporali ("created\_at" e "timestamp\_ms") che
 rappresentano in realtà il medesimo istante temporale ma con precisione differente.
 Tuttavia è possibile notare un certo ritardo nella ricezione dei tweets di circa 5-10
-secondi, perciò è risultato necessario un campo aggiuntivo chiamato "receivedat" così
+secondi, perciò è risultata necessaria l'aggiunta di un campo chiamato "receivedat" così
 da tenere traccia del momento di ricezione.
+
 L'analisi verrà successivamente effettuata principalmente sul campo "text" contente il
 corpo del tweet.
+
+I tweet sono filtrati "a monte" tramite le API di Twitter quindi ogni tweet ricevuto risulta già
+pertinente con il filtro utilizzato, cioè la parola "bitcoin".
+
+\subsection{Dati strutturati}
 
 Lo schema di entrambe le categorie di dati è costante per ogni messaggio rendendoli dati
 strutturati o semi-strutturati per quanto riguarda i tweets, che presentano uno schema più complicato
 contente elementi innestati (abbreviati nell'esempio per motivi di spazio) e del testo.
 Nonostante ciò, anche per il fatto che dell'intero tweet i campi analizzati saranno il testo
 e le coordinate temporali, è possibile utilizzare una rappresentazione relazionale.
-
-I tweet sono filtrati "a monte" attraverso le API di Twitter quindi ogni tweet ricevuto risulta già
-pertinente; come filtro è stata utilizzato la parola "bitcoin".
-
-% 2 parole sul fatto che sono strutturati
-
-% sono timeseries

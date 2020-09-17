@@ -13,25 +13,15 @@ utile per esempio nel caso si desideri collezionare gli stessi dati da più font
 all'interruzione dei dati riguardanti l'andamento della criptovaluta sul mercato).
 \\
 La scelta è ricaduta sul suddetto software perché in grado di garantire
-high-availability, fault-tolerancy, ottime performance e la possibilità di configurare un cluster
-di più nodi scalabile quindi orizzontalmente. \cite{kafka_doc}
+high-availability, fault-tolerancy, ottime performance scalabili orizzontalmente grazie
+alla possibilità di configurare un cluster di più nodi. \cite{kafka_doc}
 \\
 In più grazie risulta ben integrato con Apache Spark, framework su cui si basa l'applicazione
-analitica, semplificando la ricezione dei messaggi dal broker.
-
-% La versione utilizzata è ...
-
-\subsubsection{Zookeeper}
-
-Apache Zookeeper è un software open-source, anch'esso distribuito sotto licenza
-Apache 2.0 \cite{apache2_license}, che nasce come "coordinatore" di sistemi distribuiti
-in grado di svolgere compiti come rendere disponibili configurazioni centralizzati ai vari
-componenti distribuiti. Zookeeper è al momento richiesto da Kafka per memorizzare metadati
-necessari al funzionamento del cluster \cite{kafka_zookeeper}.
+analitica.
 
 \subsection{Producers}
 
-Il ruolo dei producer consiste nel ricevere dati in streaming da determinate fonti e di
+Il ruolo dei producer consiste nel ricevere dati in streaming e di
 pubblicarli prontamente su di un topic Kafka.
 \\
 Entrambi i producer sono stati realizzati in python per semplicità nell'utilizzo delle
@@ -49,13 +39,14 @@ avvalendosi della libreria ufficiale per poi pubblicarli su Kafka.
 
 Tweets producer fa uso della libreria Tweepy \cite{tweepy} per ottenere tweets relativi
 ad un determinato filtro e poi pubblicarli su Kafka.
-\\
+
+\subsubsection{Funzionamento}
 La logica di entrambi i producer si può riassumere nelle seguenti fasi:
 \begin{enumerate}
     \item Connessione alla fonte di dati
     \item Connessione a Kafka
-    \item Definizione di una funziona da effettuare al ricevimento di nuovi messaggi che
-          principalmente si occuperà della pubblicazione del messaggio su Kafka
+    \item Definizione di una funzione da eseguire alla ricezione di nuovi messaggi che
+          principalmente si occuperà della loro pubblicazione su Kafka
 \end{enumerate}
 
 Segue un estratto di codice da "Tweets producer":
@@ -86,24 +77,24 @@ twStream.filter(track=tweets_filter)
 \subsection{TimescaleDB}
 
 TimescaleDB è un database relazionale open-source ottimizzato per dati di tipo time-series
-offrendo strutture adeguate al tipo di dati così da incrementare le performance dalla ricerca
+che offre strutture adeguate volte ad incrementare le performance dalla ricerca
 all'inserimento fino allo storage; ad esempio permette di impostare un intervallo di tempo
 dopo il quale i dati vengono compressi \cite{timescale}.
 \\
 Si basa su PostgreSQL, noto database relazionale open-source \cite{postgresql}, più precisamente
 ne è un estensione. Per questo motivo TimescaleDB risulta relativamente semplice da utilizzare
 per coloro che hanno già avuto esperienza con PostgreSQL ed è inoltre compatibile con i client
-supportati da PostgreSQL.
+da esso supportati.
 \\
 Ciò semplifica la connessione con l'applicazione Spark che grazie al modulo Spark SQL è in grado
-di utilizzare driver JDBC per interagire con database relazionali tra cui PostgreSQL
+di utilizzare driver JDBC per interagire con database relazionali tra cui appunto PostgreSQL
 \cite{spark_sql}.
 
 \subsection{Spark}
 
 Apache Spark è un framework open-source per l'analisi di dati su larga scala che offre ottime
 performance sia per elaborazioni batch che in streaming. Offre API di alto livello nei linguaggi
-Scala, Java, Python e R, e librerie aggiuntive come MLlib, che fornisce strumenti utili per il
+Scala, Java, Python e R, e librerie aggiuntive come MLlib, che fornisce strumenti utili al
 machine learning, Spark SQL, modulo per l'elaborazione di dati strutturati,
 e Structured Streaming basato su Spark SQL ma rivolto ai dati strutturati in streaming \cite{spark}.
 \\
@@ -112,8 +103,8 @@ e fault-tolerant; infatti possono
 essere eseguite su cluster comprendenti diverse macchine tra cui almeno un \textbf{master} ed un
 \textbf{worker}.
 \\
-Spark risulta decisamente più performante del paradigma MapReduce soprattutto per quegli algoritmi
-che necessitano ripetute letture degli stessi dati per il fatto che al contrario di MapReduce non
+Spark risulta significativamente più performante del paradigma MapReduce soprattutto per quegli algoritmi
+che necessitano ripetute letture degli stessi dati poiché al contrario di MapReduce non
 necessita di rileggere i dati da disco ma utilizza una cache in memoria \cite{spark_mapred}.
 
 \subsubsection{StreamApp}
@@ -125,15 +116,9 @@ si occupa di ricevere, elaborare e analizzare sia i dati finanziari che i tweets
 
 Applicazione aggiuntiva anch'essa sviluppata utilizzando le API Scala di Apache Spark che si occupa
 del training di alcuni modelli utilizzati da StreamApp a partire dai dati ricevuti da essa.
-Per questo motivo StreamApp è necessariamente in grado di funzionare (parzialmente) anche in assenza
+Per questo motivo StreamApp è in grado di funzionare (parzialmente) anche in assenza
 di questi modelli cosicché sia possibile ottenere una quantità di dati iniziale con cui allenare i
 modelli.
-
-\subsection{Grafana}
-
-Grafana è un software open-source che si occupa di operazioni di visualizzazione e analitiche
-di dati tra cui serie temporali. È qui utilizzato come dashboard per eseguire query verso
-TimescaleDB e permetterne una semplice e completa visualizzazione dei risultati.
 
 \begin{figure}[h!]
     \centering
@@ -143,6 +128,3 @@ TimescaleDB e permetterne una semplice e completa visualizzazione dei risultati.
     ]{ad_schema.png}
     \caption{Schema delle componenti principali}
 \end{figure}
-
-% schema grafico
-% docker-compose
