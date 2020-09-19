@@ -115,3 +115,13 @@ Una volta installato posizionarsi nella cartella del progetto (e.g streamapp o t
 sbt clean assembly
 ```
 A fine processo il jar si troverà ad esempio in `target/scala-2.12/StremApp-assembly-1.0.jar`.
+
+### Dashboard
+
+Grafana è stato usato come dashboard ed è raggiungile all'indirizzo http://localhost:3000
+se eseguito il docker-compose.
+
+Per visualizzare la dashboard è sufficiente aggiungere timescale come datasource utilizzando
+PostgreSQL sia come tipo che come nome.
+
+In seguito importare la dashboard dal file `Main.json`
