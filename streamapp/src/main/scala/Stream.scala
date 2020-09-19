@@ -27,6 +27,10 @@ import picocli.CommandLine._
 
 import java.util.concurrent.Callable
 
+/*
+* Command line stuff
+*/
+
 @Command(
   name = "StreamApp",
   version = Array("StreamApp v1.0"),
@@ -88,14 +92,17 @@ class Main extends Callable[Int] {
 
   def call(): Int = {
 
+    // Corpo dell'applicazione
+
     var loadedModels = true
     var lrModel : LogisticRegressionModel = null
     var vectorizerModel : Word2VecModel = null
 
     try {
 
+      // è necessario che l'app funzioni anche senza i modelli per ottenere dati iniziali
+
       lrModel = LogisticRegressionModel.load(lrModelPath)
-      // val vectorozerModel = CountVectorizerModel.load("hdfs://localhost:9000/tmp/models/spark-cv-model")
       vectorizerModel = Word2VecModel.load(vectorizerModelPath)
 
     } catch {
@@ -105,6 +112,8 @@ class Main extends Callable[Int] {
     }
 
     println("loadedModels: " + loadedModels)
+
+    // schema dati
 
     val tweets_schema = new StructType()
       .add("created_at", "string")
@@ -146,6 +155,7 @@ class Main extends Callable[Int] {
       .add("A", "string")
       .add("timestamp", "string")
 
+    // spark session
     val spark = SparkSession
       .builder()
       .appName("Cons test")
@@ -156,6 +166,7 @@ class Main extends Callable[Int] {
 
     println("Startup completed")
 
+    // databases
     val pricesDB = spark.read
       .format("jdbc")
       .option("driver", "org.postgresql.Driver")
@@ -173,11 +184,14 @@ class Main extends Callable[Int] {
       .setInputCol("tokens")
       .setOutputCol("words")
 
+    // Tweets Streaming Query
     val tweets = spark.readStream
+      // ottenimento tweets da kafka
       .format("kafka")
       .option("kafka.bootstrap.servers", kafkaBootstrapServers)
       .option("subscribe", tweetsTopic)
       .load
+      // applica lo schema corretto
       .select(
         from_json($"value".cast("string"), tweets_schema).alias("value")
       )
@@ -194,6 +208,7 @@ class Main extends Callable[Int] {
       .foreachBatch { (batchDF: DataFrame, batchId: Long) =>
         var toWrite: Dataset[Row] = null
         if (loadedModels) {
+          // preprocess: tokenization, stopwords
           val preprocessed = remover
             .transform(tokenizer.transform(batchDF))
             .select("timestamp", "receivedat", "text", "words")
@@ -203,7 +218,9 @@ class Main extends Callable[Int] {
                 x.getAs[Timestamp](1),
                 x.getAs[String](2),
                 x.getAs[Seq[String]](3)
+                  // remove empty sets
                   .filter(_.length > 0)
+                  // stemming
                   .map(y => new PorterStemmer().stem(y))
               )
             )
@@ -215,6 +232,7 @@ class Main extends Callable[Int] {
               $"_4".as("words")
             )
 
+          // predict tweet polarity
           toWrite = lrModel
             .transform(vectorizerModel.transform(preprocessed))
             .withColumn("b_prediction", $"prediction".cast(BooleanType))
@@ -224,9 +242,11 @@ class Main extends Callable[Int] {
             .withColumn("processedat", current_timestamp())
 
         } else {
+          // nel caso i modelli non esistono viene saltata la parte di predizione
           toWrite = batchDF
         }
 
+        // scrittura sul database
         toWrite.write
           .format("jdbc")
           .option("driver", "org.postgresql.Driver")
@@ -239,11 +259,14 @@ class Main extends Callable[Int] {
       }
       .start()
 
+    // Prices/Financial Data Streaming Query
     val binance = spark.readStream
+      // kafka
       .format("kafka")
       .option("kafka.bootstrap.servers", kafkaBootstrapServers)
       .option("subscribe", pricesTopic)
       .load
+      // schema
       .select(
         from_json($"value".cast("string"), binance_schema).alias("value")
       )
@@ -259,6 +282,7 @@ class Main extends Callable[Int] {
       .drop("value")
       .writeStream
       .foreachBatch { (batchDF: DataFrame, batchId: Long) =>
+        // write to db
         batchDF
           .withColumn("processedat", current_timestamp())
           .write
@@ -273,6 +297,8 @@ class Main extends Callable[Int] {
       }
       .start()
 
+    // query per ottenere l'ultimo minuto aggiunto al database trend per minuto.
+    // per non ricalcolare ciò che è già stato aggiunto
     val lastTrendPerMinDB = spark.read
       .format("jdbc")
       .option("driver", "org.postgresql.Driver")
@@ -283,16 +309,20 @@ class Main extends Callable[Int] {
       .load()
       .agg(max("timestamp"))
 
+    // minuto corrente. 11:33:12 -> 11:33:00
     def currentmin(): Timestamp = {
       val now = System.currentTimeMillis()
       return new Timestamp(now - now % 60000L)
     }
 
+    // timer periodico che calcola trend per minuto
     val timer = new java.util.Timer()
     val task = new java.util.TimerTask {
       def run() = {
+        // ultimo minuto aggiunto al database trend per minuto; esegue la query
         val latestTime = lastTrendPerMinDB.take(1)(0)(0).asInstanceOf[Timestamp]
 
+        // filtra il dataframe rimuovendo i minuti già calcolati fino al minuto corrente escluso
         val step1 =
           if (latestTime == null)
             pricesDB.filter($"timestamp" < currentmin())
@@ -302,6 +332,7 @@ class Main extends Callable[Int] {
                 && $"timestamp" >= new Timestamp(latestTime.getTime() + 60000L)
             )
 
+        // aggreaga calcolando media per minuto
         val step2 = step1
           .groupBy(window($"timestamp", "1 minute"))
           .agg(avg("askprice"))
@@ -309,6 +340,8 @@ class Main extends Callable[Int] {
           .withColumnRenamed("start", "timestamp")
           .withColumnRenamed("avg(askprice)", "avgaskprice")
 
+        // join con se stesso al minuto successivo per capire se il prezzo medio
+        // al minuto successivo è maggiore o minore
         val trendPerMin = step2
           .join(
             step2
@@ -317,8 +350,10 @@ class Main extends Callable[Int] {
           )
           // minuto positivo se il prossimo minuto ha un valore maggiore
           .filter(expr("timestamp + interval '1 minute' = new_timestamp"))
+          // calcolo del trend
           .withColumn("asktrend", $"new_avgaskprice" >= $"avgaskprice")
           .select("timestamp", "asktrend", "avgaskprice")
+          // scrive su database
           .write
           .format("jdbc")
           .option("driver", "org.postgresql.Driver")
@@ -330,6 +365,7 @@ class Main extends Callable[Int] {
           .save()
       }
     }
+    // eseguito ogni minuto
     timer.schedule(task, 0, 60000L)
 
     tweets.awaitTermination
@@ -338,6 +374,7 @@ class Main extends Callable[Int] {
     binance.stop
     timer.cancel()
 
+    // commandline exit code
     0
   }
 }
