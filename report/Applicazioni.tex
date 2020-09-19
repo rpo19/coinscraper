@@ -12,7 +12,6 @@ Dataframe.
     // Schema del json
     val binance_schema = new StructType()
           ...
-          .add("s", "string")
           .add("a", "string")
           .add("timestamp", "string")
     
@@ -21,13 +20,11 @@ Dataframe.
         .option("kafka.bootstrap.servers", kafkaBootstrapServers)
         .option("subscribe", pricesTopic)
         .load.select(
-        from_json($"value".cast("string"), binance_schema).alias("value")
-        )
+        from_json($"value".cast("string"), binance_schema).alias("value"))
         .withColumn("askprice", $"value.a".cast(DoubleType))
         ...
         .withColumn("timestamp",
-        ($"value.timestamp".cast(DoubleType)).cast(TimestampType)
-        )
+        ($"value.timestamp".cast(DoubleType)).cast(TimestampType))
         .writeStream
         .foreachBatch {
             (batchDF: DataFrame, batchId: Long) =>
@@ -39,8 +36,7 @@ Dataframe.
             .option("url", jdbcUrl)
             ...
             .save()
-        }
-        .start()
+        }.start()
     \end{lstlisting}
     \caption{Esempio di Streaming Query}
     \label{streamingquery}
@@ -153,13 +149,14 @@ ne esegue una validazione dividendo il dataset in trainset e testset e computand
 (Area Under ROC).
 Purtroppo i risultati ottenuti non sono dei migliori: i valori di AUC sono intorno a 0.5, cioè
 le performance sono paragonabili a una scelta random.
-La polarità dei tweets calcolata dal modello non corrisponde quindi all'effettivo andamento del
-prezzo di ask.
-In più molti tweets sono probabilmente irrilevanti con il momento in considerazione,
-perciò potrebbe essere utile un
-filtraggio manuale di un insieme ristretto di tweets in modo da selezionare solo quelli rilevanti
-e un'ulteriore operazione manuale di etichettatura per sopperire al fatto che non è stato sufficiente
-utilizzare l'andamento del prezzo di ask come target.
+
+Ciò può significare che il contenuto dei tweets generalmente non è correlato all'andamento
+del prezzo di ask.
+Potrebbe perciò rivelarsi utile un
+filtraggio manuale di un insieme ristretto di tweets in modo da selezionare solo quelli rilevanti.
+
+In aggiunta un'ulteriore operazione manuale di etichettatura potrebbe chiarire se l'andamento
+dei prezzi sia un parametro adeguato a definire la polarità dei tweets.
 
 \begin{figure}[h!]
     \centering
