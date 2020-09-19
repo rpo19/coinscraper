@@ -1,6 +1,26 @@
 # Big Data Velocity
 ## Ottenimento e analisi di dati in streaming
 
+### Codice sorgente
+
+#### StreamApp
+
+```
+streamapp/src/main/scala/Stream.scala
+```
+
+#### TrainApp
+
+```
+trainapp/src/main/scala/Train.scala
+```
+
+#### Producers
+```
+binance/binance_producer.py
+tweepy/tweets_producer.py
+```
+
 ### Installazione con docker
 
 Dipendenze:  
