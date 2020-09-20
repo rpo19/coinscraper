@@ -11,22 +11,24 @@ su specifici topic. Ciò consente a più producer di pubblicare su topic distint
 utile per esempio nel caso si desideri collezionare gli stessi dati da più fonti
 (in questo contesto aggiungere fonti secondarie potrebbe frazionare il rischio relativo
 all'interruzione dei dati riguardanti l'andamento della criptovaluta sul mercato).
-\\
+
 La scelta è ricaduta sul suddetto software perché in grado di garantire
 high-availability, fault-tolerancy, ottime performance scalabili orizzontalmente grazie
 alla possibilità di configurare un cluster di più nodi. \cite{kafka_doc}
-\\
-In più grazie risulta ben integrato con Apache Spark, framework su cui si basa l'applicazione
+
+In più risulta ben integrato con Apache Spark, framework su cui si basa l'applicazione
 analitica.
+
+È stata utilizzata l'attuale ultima versione: \textit{2.6.0}.
 
 \subsection{Producers}
 
 Il ruolo dei producer consiste nel ricevere dati in streaming e di
 pubblicarli prontamente su di un topic Kafka.
-\\
+
 Entrambi i producer sono stati realizzati in python per semplicità nell'utilizzo delle
 librerie fornite dalle fonti per l'acquisizione di dati in tempo reale.
-\\
+
 Allo scopo di valutare le performance dell'intero progetto entrambi i producer aggiungono
 ad ogni messaggio un campo contenente l'esatto momento di ricezione.
 
@@ -49,7 +51,7 @@ La logica di entrambi i producer si può riassumere nelle seguenti fasi:
           principalmente si occuperà della loro pubblicazione su Kafka
 \end{enumerate}
 
-Segue un estratto di codice da "Tweets producer":
+Segue un estratto del codice di Tweets producer:
 
 \begin{lstlisting}[language=json,firstnumber=1]
 # Connessione a Kafka
@@ -77,18 +79,20 @@ twStream.filter(track=tweets_filter)
 \subsection{TimescaleDB}
 
 TimescaleDB è un database relazionale open-source ottimizzato per dati di tipo time-series
-che offre strutture adeguate volte ad incrementare le performance dalla ricerca
+in modo da incrementare le performance dalla ricerca
 all'inserimento fino allo storage; ad esempio permette di impostare un intervallo di tempo
 dopo il quale i dati vengono compressi \cite{timescale}.
-\\
+
 Si basa su PostgreSQL, noto database relazionale open-source \cite{postgresql}, più precisamente
 ne è un estensione. Per questo motivo TimescaleDB risulta relativamente semplice da utilizzare
 per coloro che hanno già avuto esperienza con PostgreSQL ed è inoltre compatibile con i client
 da esso supportati.
-\\
+
 Ciò semplifica la connessione con l'applicazione Spark che grazie al modulo Spark SQL è in grado
 di utilizzare driver JDBC per interagire con database relazionali tra cui appunto PostgreSQL
 \cite{spark_sql}.
+
+È stata utilizzata la versione \textit{1.7.2-pg12}.
 
 \subsection{Spark}
 
@@ -97,15 +101,17 @@ performance sia per elaborazioni batch che in streaming. Offre API di alto livel
 Scala, Java, Python e R, e librerie aggiuntive come MLlib, che fornisce strumenti utili al
 machine learning, Spark SQL, modulo per l'elaborazione di dati strutturati,
 e Structured Streaming basato su Spark SQL ma rivolto ai dati strutturati in streaming \cite{spark}.
-\\
+
 Le API Spark consentono di sviluppare applicazioni scalabili orizzontalmente, highly-available
 e fault-tolerant; infatti possono
 essere eseguite su cluster comprendenti diverse macchine tra cui almeno un \textbf{master} ed un
 \textbf{worker}.
-\\
+
 Spark risulta significativamente più performante del paradigma MapReduce soprattutto per quegli algoritmi
 che necessitano ripetute letture degli stessi dati poiché al contrario di MapReduce non
 necessita di rileggere i dati da disco ma utilizza una cache in memoria \cite{spark_mapred}.
+
+È stata utilizzata la versione \textit{3.0.0}.
 
 \subsubsection{StreamApp}
 

@@ -18,7 +18,7 @@ Ogni worker dispone di 1 cpu e 1gb di ram ed il loro numero è stato incrementat
 allo scopo di testare la scalabilità dell'applicazione in questo modo:
 
 \begin{itemize}
-    \item inizialmente (alle 20:50 circa) è stato eseguito un solo worker nella prima macchina
+    \item inizialmente, alle 20:50 circa, è stato eseguito un solo worker nella prima macchina
     \item tre minuti dopo ne è stata eseguita un'altra istanza sulla prima macchina
     \item d'ora in poi ogni 3 minuti è stato aggiunto un worker sulla seconda macchina fino a
           a raggiungere un totale di 10 worker sulla seconda macchina più 2 sulla prima
@@ -34,16 +34,16 @@ allo scopo di testare la scalabilità dell'applicazione in questo modo:
 
 
 Nella Figura \ref{processdelay} è riportato il grafico che mostra il tempo impiegato
-nell'elaborare ed analizzare tweets
-(in giallo) e prezzi (in verde) ricevuti calcolato come differenza tra il momento di ricezione
+nell'elaborare ed analizzare tweets, in giallo,
+e prezzi, in verde, calcolato come differenza tra il momento di ricezione
 (aggiunto dai producer) ed il momento subito precedente all'inserimento nel database.
 
 Si può notare che generalmente i tempi richiesti (mediamente 300ms per i prezzi e 750ms per
 i tweets) siano pressoché indipendenti dal numero di worker,
-probabilmente significando che uno o due worker sono in grado di gestire il flusso medio di dati
+probabilmente a significare che uno o due worker sono in grado di gestire il flusso medio di dati
 ricevuto (mostrato in Figura \ref{rate}).
 
-Ed è evidente come aggiungendo worker diminuiscano numero e 
+È invece evidente come aggiungendo worker diminuiscano numero e 
 frequenza dei "picchi", probabilmente dovuti ad oscillazioni nella frequenza dei messaggi ricevuti,
 in favore della stabilità complessiva del sistema.
 
@@ -56,9 +56,10 @@ in favore della stabilità complessiva del sistema.
 In Figura \ref{rate} è riportato il numero di messaggi ricevuti al minuto da Twitter, in giallo
 sull'asse delle ordinate destro, e da Binance, in verde sulle ordinate a sinistra, nell'intervallo
 di tempo preso in analisi.
+
 Riassumendo sono stati ricevuti ogni minuto in media 895 messaggi relativi ai prezzi con un
 massimo di 1737, mentre per quanto riguarda i tweets mediamente 64 con un massimo di 154. 
 
 È possibile notare una corrispondenza tra i massimi del grafico in Figura \ref{rate} con i picchi
-di quello in Figura \ref{processdelay} che dimiuisce all'aumentare del numero dei worker fino
+di quello in Figura \ref{processdelay} che cala all'aumentare del numero dei worker fino
 a svanire per i massimi dalle 22 in poi.

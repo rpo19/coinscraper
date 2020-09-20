@@ -4,7 +4,7 @@ L'applicazione principale del progetto è la StreamApp composta principalmente d
 Query e da un task eseguito periodicamente.
 
 Grazie a Spark Structured Streaming è infatti possibile trattare dati strutturati ottenuti in
-real-time da fonti come Apache Kafka similmente a delle query SQL utilizzando strutture chiamate
+real-time da fonti come Apache Kafka similmente a delle tabelle SQL utilizzando strutture chiamate
 Dataframe.
 
 \begin{figure}
@@ -49,8 +49,7 @@ nell'ordine di:
     \item Applicare uno schema corretto ai dati (il corpo dei messaggi Kafka è contenuto nel campo
     value) rinominandoli opportunamente e utilizzando casting al tipo corretto ove necessario.
     \item Aggiungere eventuali informazione ai dati; per esempio viene aggiunto il campo
-    "processedat" con il timestamp corrente allo scopo di facilitare a valutazione delle performance
-    dell'applicazione.
+    "processedat" con il timestamp corrente allo scopo di facilitare la valutazione delle performance.
     \item Scrivere i dati nel database TimescaleDB (attraverso il driver jdbc di postgresql). Questa
     operazione viene svolta attraverso la direttiva foreachBatch in quanto attualmente non è
     possibile scrivere dati da una Streaming Query direttamente in un database, ma è possibile farlo a
@@ -63,13 +62,17 @@ nell'ordine di:
 \subsection{Analisi}
 
 L'analisi effettuata cerca di valutare la positività dei tweets ricevuti (il target è quindi
-binario) attraverso modelli allenati a partire dai dati ricevuti utilizzando come target
+binario) attraverso modelli allenati utilizzando come target
 l'andamento del prezzo di ask di BTCUSDT relativo al minuto di pubblicazione del tweet in modo
-che sia positivo ogni minuto il cui successivo abbia un prezzo di ask medio superiore e
-negativo altrimenti.
+che sia positivo ogni tweet seguito da un aumento del prezzo di ask medio. A tale scopo
+è stato definito positivo ogni
+minuto il cui successivo abbia un prezzo di ask medio superiore e
+negativo altrimenti e di conseguenza un tweet è considerabile positivo se pubblicato durante un
+"minuto positivo".
 
 In Figura \ref{streamingquery} è illustrato come i dati finanziari contenenti i prezzi di ask
-vengono ottenuti e salvati nel database, tuttavia la singola Streaming Query non è sufficiente
+vengono ottenuti e salvati nel database tramite una Streaming Query,
+tuttavia la singola Streaming Query non è sufficiente
 a calcolare il valore medio del prezzo di ask per minuto; sono infatti necessarie due query: una
 per salvare i dati ed una seconda per computare il prezzo medio ogni minuto. Per ovviare a
 quest'ultima esigenza StreamApp istanzia un timer che periodicamente esegue le operazioni necessarie
@@ -102,7 +105,7 @@ dell'altra streaming query eccetto che la fase di aggiunta di informazioni è pi
 esegue l'analisi vera e propria per classificare la polarità dei tweets attraverso modelli
 precedentemente allenati tramite la TrainApp.
 
-La classificazione risulta essenzialmente una "Sentiment Analysis" supervisionata e sfrutta alcune
+La classificazione risulta essenzialmente una \textit{Sentiment Analysis} supervisionata e sfrutta alcune
 funzionalità della libreria MLlib di Spark; implica nell'ordine di:
 
 \begin{enumerate}
@@ -110,24 +113,34 @@ funzionalità della libreria MLlib di Spark; implica nell'ordine di:
     \item Rimuovere le cosiddette "stop-words".
     \item Eseguire lo "stemming" su ogni token.
     \item Trasformare l'input tramite word embedding in modo da ottenere una rappresentazione
-    utilizzabile come input per allenare un modello di machine learning; è stato utilizzato
+    utilizzabile per allenare un modello di machine learning; è stato utilizzato
     Word2Vec.
     \item Infine fornire la rappresentazione ottenuta tramite Word2Vec come input ad una Regressione
-    Logistica, modello in grado di classificare target binari.
+    Logistica, in grado di classificare target binari.
 \end{enumerate}
 
 Ognuno di questi step, eccetto lo stemming, utilizza funzioni fornite dalla MLlib di Apache Spark
 e per questo motivo si tratta di operazioni scalabili orizzontalmente sui vari nodi del cluster.
 Per quanto riguarda lo stemming invece non è stato possibile utilizzare librerie sviluppate
 appositamente per l'ultima versione di Spark ma è stato utilizzato Apache OpenNLP, tuttavia
-riuscendo ugualemente a rendere l'esecuzione di questo step distribuibile su più nodi.
+riuscendo ugualmente a rendere l'esecuzione di questo step distribuibile su più nodi.
 
-In Figura \ref{streamapp} è illustrato uno schema del funzionamento di StreamApp.
+In Figura \ref{streamapp} è riportato uno schema del funzionamento di StreamApp.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[
+		height=10cm,
+		keepaspectratio,
+    ]{streamapp.png}
+    \caption{Schema del funzionamento di StreamApp}
+    \label{streamapp}
+\end{figure}
 
 \subsection{Training}
 
 Il training dei modelli è svolto per conto della TrainApp: a partire dai tweets
-salvati nel database sono stati eseguiti alcuni degli stessi passaggi necessari anche per
+salvati nel database sono stati eseguiti alcuni degli stessi passaggi necessari per
 l'analisi in streaming, quali:
 
 \begin{enumerate}
@@ -157,13 +170,3 @@ filtraggio manuale di un insieme ristretto di tweets in modo da selezionare solo
 
 In aggiunta un'ulteriore operazione manuale di etichettatura potrebbe chiarire se l'andamento
 dei prezzi sia un parametro adeguato a definire la polarità dei tweets.
-
-\begin{figure}[h!]
-    \centering
-    \includegraphics[
-		height=10cm,
-		keepaspectratio,
-    ]{streamapp.png}
-    \caption{Schema del funzionamento di StreamApp}
-    \label{streamapp}
-\end{figure}
