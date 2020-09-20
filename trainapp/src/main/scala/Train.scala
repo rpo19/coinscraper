@@ -76,7 +76,7 @@ class Main extends Callable[Int] {
     // spark session
     val spark = SparkSession
       .builder()
-      .appName("Cons test")
+      .appName("TrainApp")
       .config("spark.sql.caseSensitive", "true")
       .getOrCreate()
     spark.sparkContext.setLogLevel("WARN")
