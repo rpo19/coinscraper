@@ -26,7 +26,7 @@ tweepy/tweets_producer.py
 Dipendenze:  
 * docker https://docs.docker.com/get-docker/
 * docker-compose https://docs.docker.com/compose/install/
-* account Twitter https://twitter.com/
+* account Twitter Developer https://twitter.com/
 * account Binance https://www.binance.com/
 
 Una volta installati docker e docker compose:
@@ -39,16 +39,22 @@ docker-compose up -d
 ```
 per avviare tutti i componenti attraverso docker.
 
-
 Inizialmente l'applicazione acquisirà semplicemente i dati, in seguito eseguire un restart di trainapp
 ```
-docker-compose restart trainapp
+docker-compose stop streamapp
+docker-compose up trainapp # attendere la fine
 ```
 in modo da allenare i modelli e di streamapp
 ```
 docker-compose restart streamapp
 ```
 in modo che i modelli vengano usati per classificare tweets.
+
+Per controllare che streamapp stia utilizzando i modelli per analizzare i tweets eseguire questa query
+(vedi "Accesso al db timescale")
+```
+select prediction from tweets where prediction is not null;
+```
 
 Purtroppo non è possibile con l'attuale configurazione eseguire nodi Spark worker su più macchine utilizzando docker.
 
@@ -125,3 +131,20 @@ Per visualizzare la dashboard è sufficiente aggiungere timescale come datasourc
 PostgreSQL sia come tipo che come nome.
 
 In seguito importare la dashboard dal file `Main.json`
+
+### Accesso al db timescale
+
+#### Command line psql
+
+Eseguire
+```
+docker-compose exec timescale psql -U postgres
+# \dt -- mostra le tabelle
+# select * from prices;
+```
+
+#### Pgadmin
+
+*   Aprire http://localhost:9080
+*   accedere con `postgres@localhost` e `password`
+*   aggiungere la connessione a timescale: indirizzo del database `timescale` e password `password`
