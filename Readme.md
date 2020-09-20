@@ -101,9 +101,17 @@ N.B:
 Siccome le immagini docker durante la fase di build creano il jar la soluzione più semplice è quella
 di estrarre il jar dall'immagine docker; ad esempio eseguendo:
 ```
-docker-compose run --rm --entrypoint '' -T streamapp cat /app/target/scala-2.12/StreamApp-assembly-1.0.jar > /path/to/StreamApp-assembly-1.0.jar
+docker-compose run \
+    --rm \
+    --entrypoint '' \
+    -T streamapp \
+    cat /app/target/scala-2.12/StreamApp-assembly-1.0.jar > /path/to/StreamApp-assembly-1.0.jar
 # oppure per TrainApp
-docker-compose run --rm --entrypoint '' -T streamapp cat /app/target/scala-2.12/TrainApp-assembly-1.0.jar > /path/to/TrainApp-assembly-1.0.jar
+docker-compose run \
+    --rm \
+    --entrypoint '' \
+    -T streamapp \
+    cat /app/target/scala-2.12/TrainApp-assembly-1.0.jar > /path/to/TrainApp-assembly-1.0.jar
 ```
 Questi comandi creranno i file
 ```
