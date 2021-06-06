@@ -2,6 +2,11 @@
 
 This is a project for the master course Data Technology for Università di Milano Bicocca.
 
+The goal of this project is to obtain streaming data and analyse them in real-time setting up a scalable system.
+Two different types of data are collected and analyzed in the project:
+- bitcoin prices
+- tweets
+
 This Readme's aim is to provide enough information to configure and start the project.
 
 For more about the project look at:
