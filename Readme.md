@@ -21,13 +21,13 @@ They are both in Italian.
 
 ### Codice sorgente
 
-#### StreamApp
+#### StreamApp (Apache Spark application)
 
 ```
 streamapp/src/main/scala/Stream.scala
 ```
 
-#### TrainApp
+#### TrainApp (Apache Spark application)
 
 ```
 trainapp/src/main/scala/Train.scala
