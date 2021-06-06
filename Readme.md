@@ -7,6 +7,8 @@ Two different types of data are collected and analyzed in the project:
 - bitcoin prices
 - tweets
 
+The analysis task is the prediction of bitcoin prices starting from related tweets. Anyway the main goal of the process is the system which enables a real-time scalable analysis and not the analysis itself.
+
 This Readme's aim is to provide enough information to configure and start the project.
 
 For more about the project look at:
