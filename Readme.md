@@ -1,4 +1,15 @@
 # Big Data Velocity
+
+This is a project for the master course Data Technology for Università di Milano Bicocca.
+
+This Readme's aim is to provide enough information to configure and start the project.
+
+For more about the project look at:
+- the report [Report.pdf](report/Report.pdf)
+- the presentation [Big Data Velocity.pptx](presentation/Big Data Velocity.pptx)
+
+They are both in Italian.
+
 ## Ottenimento e analisi di dati in streaming
 
 ### Codice sorgente
@@ -23,7 +34,7 @@ tweepy/tweets_producer.py
 
 ### Installazione con docker
 
-Dipendenze:  
+Dipendenze:
 * docker https://docs.docker.com/get-docker/
 * docker-compose https://docs.docker.com/compose/install/
 * account Twitter Developer https://twitter.com/
